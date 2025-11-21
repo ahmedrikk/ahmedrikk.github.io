@@ -1446,6 +1446,45 @@ body {
     color: #e1306c;
 }
 
+.social-card.imdb:hover {
+    border-color: #f5c518;
+    background: rgba(245, 197, 24, 0.1);
+}
+
+.social-card.imdb i {
+    color: #f5c518;
+}
+
+.social-card.imdb span {
+    color: #f5c518;
+}
+
+.social-card.vimeo:hover {
+    border-color: #1ab7ea;
+    background: rgba(26, 183, 234, 0.1);
+}
+
+.social-card.vimeo i {
+    color: #1ab7ea;
+}
+
+.social-card.vimeo span {
+    color: #1ab7ea;
+}
+
+.social-card.medium:hover {
+    border-color: #00ab6c;
+    background: rgba(0, 171, 108, 0.1);
+}
+
+.social-card.medium i {
+    color: #00ab6c;
+}
+
+.social-card.medium span {
+    color: #00ab6c;
+}
+
 .contact-cta {
     color: var(--text-muted);
     font-style: italic;
