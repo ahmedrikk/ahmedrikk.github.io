@@ -1,0 +1,162 @@
+╔═══════════════════════════════════════════════════════════════╗
+║              PORTFOLIO DEPLOYMENT CHECKLIST                   ║
+║              Ahmed Bin Athar - ahmedrikk.github.io           ║
+╚═══════════════════════════════════════════════════════════════╝
+
+STEP 1: DEPLOY FILES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[ ] Navigate to your GitHub repo:
+    $ cd ~/path/to/ahmedrikk.github.io
+
+[ ] Copy new files:
+    $ cp portfolio-redesign/index.html .
+    $ cp portfolio-redesign/css/style.css css/
+    $ cp portfolio-redesign/js/main.js js/
+
+[ ] Or use automated script:
+    $ ./portfolio-redesign/deploy.sh
+
+[ ] Commit and push:
+    $ git add .
+    $ git commit -m "Portfolio redesign: unixporn aesthetic + personality"
+    $ git push origin main
+
+[ ] Wait 2-3 minutes for GitHub Pages to rebuild
+
+STEP 2: ADD REQUIRED FILES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[ ] Create assets folder:
+    $ mkdir -p assets
+
+[ ] Add your resume PDF:
+    $ cp ~/path/to/your-resume.pdf assets/resume.pdf
+
+[ ] (Optional) Add social media preview image:
+    $ cp ~/path/to/preview-image.png assets/hero-preview.png
+    Recommended size: 1200x630px
+
+[ ] Commit assets:
+    $ git add assets/
+    $ git commit -m "Add resume and preview image"
+    $ git push origin main
+
+STEP 3: VERIFY DEPLOYMENT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[ ] Visit https://ahmedrikk.github.io
+[ ] Hard refresh (Cmd+Shift+R / Ctrl+Shift+R)
+[ ] Test dark/light mode toggle
+[ ] Test mobile menu (hamburger)
+[ ] Verify all 4 YouTube videos embed correctly
+[ ] Click all navigation links
+[ ] Test "Download Resume" button
+[ ] Click Linktree buttons (hero + footer)
+[ ] Test on mobile device
+
+STEP 4: VERIFY CONTENT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[ ] Check all external links:
+    [ ] Linktree: https://linktr.ee/ahmedrikk
+    [ ] YouTube channel: https://www.youtube.com/@ahmedrikk
+    [ ] LinkedIn (if added)
+    [ ] GitHub: https://github.com/ahmedrikk
+    [ ] Instagram: https://www.instagram.com/ahmedrikk
+
+[ ] Verify film videos play:
+    [ ] Mann Ki Hastam
+    [ ] Rekhta
+    [ ] Hawwa Ka Beta
+    [ ] Pride Flag Color Theory
+
+[ ] Check contact info:
+    [ ] Email: ahmedrikk@gmail.com
+    [ ] Phone: (312) 200-2026
+    [ ] Location: Chicago, IL
+
+STEP 5: SHARE YOUR NEW PORTFOLIO
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[ ] Update LinkedIn profile:
+    - Add website: https://ahmedrikk.github.io
+    - Update headline if needed
+    - Share portfolio as post
+
+[ ] Add to job applications:
+    - Include URL in resume
+    - Reference in cover letters
+    - Add to application forms
+
+[ ] Update email signature:
+    Portfolio: https://ahmedrikk.github.io
+
+[ ] Share with friends/mentors for feedback
+
+[ ] Add to PhD applications:
+    - Reference in statements
+    - Include in supplemental materials
+    - Share with potential advisors
+
+BONUS: OPTIONAL IMPROVEMENTS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[ ] Set up Google Analytics (add tracking code to index.html)
+[ ] Add custom domain (buy domain, configure DNS)
+[ ] Create sitemap.xml for better SEO
+[ ] Add blog section if desired
+[ ] Set up contact form (Formspree integration)
+[ ] Take screenshots for your own records
+
+TROUBLESHOOTING
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Site not updating?
+  → Wait 2-3 minutes, hard refresh (Cmd+Shift+R)
+  → Check GitHub Actions: https://github.com/ahmedrikk/ahmedrikk.github.io/actions
+
+Resume download not working?
+  → Verify assets/resume.pdf exists
+  → Check file permissions
+  → Push to GitHub if missing
+
+Dark mode not saving?
+  → Clear browser cache
+  → Check localStorage isn't blocked
+  → Try in different browser
+
+Videos not loading?
+  → YouTube URLs correct?
+  → Check iframe permissions
+  → Test in incognito mode
+
+Mobile menu stuck?
+  → Hard refresh
+  → Clear cache
+  → Check console for JS errors (F12)
+
+METRICS TO TRACK
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+After deploying, monitor:
+  • Job application response rate (before vs after)
+  • PhD program feedback mentions
+  • Website traffic (if Google Analytics added)
+  • Professional inquiries
+  • Recruiter reach-outs
+
+SUCCESS INDICATORS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+✓ Site loads on desktop and mobile
+✓ All interactive features work
+✓ Content reflects your voice
+✓ No broken links or images
+✓ Resume downloads successfully
+✓ Videos play correctly
+✓ Design looks professional
+✓ You feel proud sharing it
+
+╔═══════════════════════════════════════════════════════════════╗
+║  Once all boxes are checked, you're ready to apply for       ║
+║  those $70K-$130K roles and fully-funded PhD programs!       ║
+╚═══════════════════════════════════════════════════════════════╝
+
+Questions? Check README.md for detailed instructions.
+Built with: HTML5, CSS3, Vanilla JS, and your vision.
+
+─────────────────────────────────────────────────────────────────
+Last updated: $(date)
+─────────────────────────────────────────────────────────────────
