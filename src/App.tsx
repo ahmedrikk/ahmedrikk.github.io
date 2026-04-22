@@ -87,32 +87,6 @@ function SectionTitle({ children, id }: { children: React.ReactNode; id?: string
   )
 }
 
-/* ─── Console easter egg ─── */
-
-const ASCII_ART = `
- █████╗ ██╗  ██╗███╗   ███╗███████╗██████╗ 
-██╔══██╗██║  ██║████╗ ████║██╔════╝██╔══██╗
-███████║███████║██╔████╔██║█████╗  ██║  ██║
-██╔══██║██╔══██║██║╚██╔╝██║██╔══╝  ██║  ██║
-██║  ██║██║  ██║██║ ╚═╝ ██║███████╗██████╔╝
-╚═╝  ╚═╝╚═╝  ╚═╝╚═╝     ╚═╝╚══════╝╚═════╝ 
-`
-console.log(`%c${ASCII_ART}`, 'color: #D4A017; font-size: 12px; font-family: monospace;')
-console.log('%c Most people scroll. You inspect. I like that. ', 'background: #D4A017; color: #1a1a1a; font-size: 14px; font-weight: bold; padding: 4px 8px; border-radius: 3px;')
-console.log('%c Filmmaker. AI Builder. Content Strategist. ', 'color: #94a3b8; font-size: 13px;')
-
-Object.defineProperty(window, '__rik', {
-  value: Object.freeze({
-    stack: 'React 19 + TypeScript + Vite + Tailwind v4 + Motion',
-    llm: 'Claude (streaming SSE)',
-    films: '4 short films, 15+ festival selections, 120K+ views',
-    projects: 'QuranAI (live RAG), Pixel Pulse (AI news aggregator)',
-    current: 'Meta Reality Labs — AI Content Evaluation',
-    hire_me: 'ahmedrikk@gmail.com',
-  }),
-  configurable: false,
-})
-
 /* ─── Hero Section ─── */
 
 function HeroSection() {
