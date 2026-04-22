@@ -1,5 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { useAudioAnalyser } from './useAudioAnalyser';
+import { apiPath } from './config';
 
 export type VoiceStatus = 'idle' | 'connecting' | 'listening' | 'thinking' | 'speaking' | 'error';
 
@@ -233,7 +234,7 @@ export function useVoiceMode() {
   const sendTrace = useCallback(async (transcriptData: TranscriptEntry[], lang: string, sessionId: string) => {
     if (!traceIdRef.current) return;
     try {
-      await fetch('/api/voice-trace', {
+      await fetch(apiPath('/api/voice-trace'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -302,7 +303,7 @@ export function useVoiceMode() {
 
     try {
       // 1. Get ephemeral token
-      const tokenRes = await fetch('/api/voice-token', {
+      const tokenRes = await fetch(apiPath('/api/voice-token'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ lang, sessionId }),
@@ -682,7 +683,7 @@ export function useVoiceMode() {
   // Handle function calling (RAG search)
   async function handleFunctionCall(callId: string, query: string, ws: WebSocket, _lang: string, _sessionId: string) {
     try {
-      const res = await fetch('/api/rag-search', {
+      const res = await fetch(apiPath('/api/rag-search'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ query, traceId: traceIdRef.current, currentPage: currentPageRef.current }),

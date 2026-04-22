@@ -5,6 +5,7 @@ import {
   filterSourcesByResponse, detectMentionedArticles, HOME_SOURCE,
 } from './_shared/rag.js'
 import { getSystemPrompt } from './_shared/prompt.js'
+import { handleOptions, getCorsHeaders } from './_shared/cors.js'
 
 export const config = {
   runtime: 'edge',
@@ -96,8 +97,13 @@ async function reasonWithKimi(query, formattedChunks, span, langfuse) {
 // ---------------------------------------------------------------------------
 
 export default async function handler(req) {
+  const optionsResponse = handleOptions(req)
+  if (optionsResponse) return optionsResponse
+
+  const corsHeaders = getCorsHeaders(req)
+
   if (req.method !== 'POST') {
-    return new Response('Method not allowed', { status: 405 })
+    return new Response('Method not allowed', { status: 405, headers: corsHeaders })
   }
 
   try {
@@ -106,14 +112,14 @@ export default async function handler(req) {
     if (!traceId) {
       return new Response(JSON.stringify({ error: 'Missing traceId' }), {
         status: 401,
-        headers: { 'Content-Type': 'application/json' },
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
     }
 
     if (!query) {
       return new Response(JSON.stringify({ error: 'Missing query' }), {
         status: 400,
-        headers: { 'Content-Type': 'application/json' },
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
     }
 
@@ -178,7 +184,7 @@ export default async function handler(req) {
       if (langfuse) await langfuse.flushAsync()
 
       return new Response(JSON.stringify({ context, sources: filteredSources, currentPage }), {
-        headers: { 'Content-Type': 'application/json' },
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
     } catch (err) {
       ragSpan?.end({ metadata: { error: err.message } })
@@ -189,14 +195,14 @@ export default async function handler(req) {
         context: 'Search unavailable — answer from your general knowledge.',
         sources: [],
       }), {
-        headers: { 'Content-Type': 'application/json' },
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
     }
   } catch (error) {
     console.error('RAG search error:', error)
     return new Response(JSON.stringify({ error: 'Internal server error' }), {
       status: 500,
-      headers: { 'Content-Type': 'application/json' },
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
   }
 }

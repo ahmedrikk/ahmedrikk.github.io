@@ -1,4 +1,5 @@
 import { useState, useEffect, type FormEvent } from 'react'
+import { apiPath } from '../config'
 
 interface OpsAuthProps {
   onAuth: () => void
@@ -46,7 +47,7 @@ export default function OpsAuth({ onAuth }: OpsAuthProps) {
     setLoading(true)
 
     try {
-      const res = await fetch('/api/ops/auth', {
+      const res = await fetch(apiPath('/api/ops/auth'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ password }),

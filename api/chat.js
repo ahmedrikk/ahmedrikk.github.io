@@ -9,6 +9,7 @@ import {
   containsFingerprint, LEAK_RESPONSE,
 } from './_shared/rag.js'
 import { getSystemPrompt } from './_shared/prompt.js'
+import { handleOptions, getCorsHeaders } from './_shared/cors.js'
 
 const client = new OpenAI({
   apiKey: process.env.KIMI_API_KEY,
@@ -40,10 +41,15 @@ export const config = {
 }
 
 export default async function handler(req) {
+  // Handle CORS preflight
+  const optionsResponse = handleOptions(req)
+  if (optionsResponse) return optionsResponse
+
   const t0 = Date.now()
+  const corsHeaders = getCorsHeaders(req)
 
   if (req.method !== 'POST') {
-    return new Response('Method not allowed', { status: 405 })
+    return new Response('Method not allowed', { status: 405, headers: corsHeaders })
   }
 
   const langfuse = getLangfuse()
@@ -57,7 +63,7 @@ export default async function handler(req) {
     if (bodySize > 50000) {
       return new Response(JSON.stringify({ error: 'Request too large' }), {
         status: 400,
-        headers: { 'Content-Type': 'application/json' },
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
     }
 
@@ -217,6 +223,7 @@ export default async function handler(req) {
           lang,
           fallbackMessages: cleanMessages,
           promptVersion,
+          corsHeaders,
         })
       }
 
@@ -243,6 +250,7 @@ export default async function handler(req) {
         precomputedResponse: firstResponse,
         lang,
         promptVersion,
+        corsHeaders,
       })
     }
 
@@ -268,6 +276,7 @@ export default async function handler(req) {
       tdOutputTokens: 0,
       lang,
       promptVersion,
+      corsHeaders,
     })
   } catch (error) {
     console.error('Chat API error:', error)
@@ -275,7 +284,7 @@ export default async function handler(req) {
     if (langfuse) waitUntil(langfuse.flushAsync())
     return new Response(JSON.stringify({ error: 'Error processing request' }), {
       status: 500,
-      headers: { 'Content-Type': 'application/json' },
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
   }
 }
@@ -288,7 +297,7 @@ function streamResponse({
   systemContent, messages, tools, ragSources, ragDegraded, ragDegradedReason,
   canary, intentTags, trace, langfuse, lastUserMessage, t0,
   ragUsed, ragMetrics, ragUsage, toolDecisionMs, tdInputTokens, tdOutputTokens,
-  precomputedResponse, lang, fallbackMessages, promptVersion,
+  precomputedResponse, lang, fallbackMessages, promptVersion, corsHeaders,
 }) {
   const encoder = new TextEncoder()
   let fullOutput = ''
@@ -590,6 +599,7 @@ function streamResponse({
 
   return new Response(readableStream, {
     headers: {
+      ...corsHeaders,
       'Content-Type': 'text/event-stream',
       'Cache-Control': 'no-cache',
       'Connection': 'keep-alive',

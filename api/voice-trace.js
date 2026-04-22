@@ -1,6 +1,7 @@
 import { Langfuse } from 'langfuse'
 import { waitUntil } from '@vercel/functions'
 import { classifyIntent, containsFingerprint, sendJailbreakAlert } from './_shared/rag.js'
+import { handleOptions, getCorsHeaders } from './_shared/cors.js'
 
 export const config = {
   runtime: 'edge',
@@ -19,8 +20,13 @@ function getLangfuse() {
 }
 
 export default async function handler(req) {
+  const optionsResponse = handleOptions(req)
+  if (optionsResponse) return optionsResponse
+
+  const corsHeaders = getCorsHeaders(req)
+
   if (req.method !== 'POST') {
-    return new Response('Method not allowed', { status: 405 })
+    return new Response('Method not allowed', { status: 405, headers: corsHeaders })
   }
 
   try {
@@ -28,6 +34,7 @@ export default async function handler(req) {
 
     if (!traceId) {
       return new Response(JSON.stringify({ error: 'Missing traceId' }), {
+        headers: corsHeaders,
         status: 400,
         headers: { 'Content-Type': 'application/json' },
       })
@@ -36,6 +43,8 @@ export default async function handler(req) {
     const langfuse = getLangfuse()
     if (!langfuse) {
       return new Response(JSON.stringify({ ok: true }), {
+      headers: corsHeaders,
+        headers: corsHeaders,
         headers: { 'Content-Type': 'application/json' },
       })
     }
@@ -117,6 +126,7 @@ export default async function handler(req) {
   } catch (error) {
     console.error('Voice trace error:', error)
     return new Response(JSON.stringify({ error: 'Internal server error' }), {
+      headers: corsHeaders,
       status: 500,
       headers: { 'Content-Type': 'application/json' },
     })

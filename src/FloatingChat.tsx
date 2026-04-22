@@ -20,6 +20,7 @@ import { translations } from './i18n';
 import { getSectionLabels, getPageTitles } from './articles/registry';
 import { useVoiceMode } from './useVoiceMode';
 import VoiceOrb from './VoiceOrb';
+import { apiPath } from './config';
 
 interface RagSource {
   article_id: string;
@@ -389,7 +390,7 @@ export default function FloatingChat({ lang }: FloatingChatProps) {
       const controller = new AbortController();
       abortRef.current = controller;
 
-      const response = await fetch('/api/chat', {
+      const response = await fetch(apiPath('/api/chat'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         signal: controller.signal,

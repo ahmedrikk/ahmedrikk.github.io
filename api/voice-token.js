@@ -1,4 +1,5 @@
 import { Langfuse } from 'langfuse'
+import { handleOptions, getCorsHeaders } from './_shared/cors.js'
 
 export const config = {
   runtime: 'edge',
@@ -188,14 +189,19 @@ GitHub público: github.com/santifer/cv-santiago`
 // ---------------------------------------------------------------------------
 
 export default async function handler(req) {
+  const optionsResponse = handleOptions(req)
+  if (optionsResponse) return optionsResponse
+
+  const corsHeaders = getCorsHeaders(req)
+
   if (req.method !== 'POST') {
-    return new Response('Method not allowed', { status: 405 })
+    return new Response('Method not allowed', { status: 405, headers: corsHeaders })
   }
 
   if (!process.env.OPENAI_API_KEY) {
     return new Response(JSON.stringify({ error: 'Voice mode not configured' }), {
       status: 503,
-      headers: { 'Content-Type': 'application/json' },
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
   }
 
@@ -213,7 +219,7 @@ export default async function handler(req) {
           : 'Has alcanzado el límite de 3 sesiones de voz por día',
       }), {
         status: 429,
-        headers: { 'Content-Type': 'application/json' },
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
     }
 
@@ -258,7 +264,7 @@ export default async function handler(req) {
       console.error('OpenAI Realtime session error:', errorText)
       return new Response(JSON.stringify({ error: 'Failed to create voice session' }), {
         status: 502,
-        headers: { 'Content-Type': 'application/json' },
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
     }
 
@@ -283,13 +289,13 @@ export default async function handler(req) {
       traceId,
       expiresAt: data.client_secret?.expires_at,
     }), {
-      headers: { 'Content-Type': 'application/json' },
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
   } catch (error) {
     console.error('Voice token error:', error)
     return new Response(JSON.stringify({ error: 'Internal server error' }), {
       status: 500,
-      headers: { 'Content-Type': 'application/json' },
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
   }
 }
