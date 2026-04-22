@@ -1,11 +1,11 @@
 /**
  * Vercel Cron Job - LLM-as-Judge Batch Evaluator
  *
- * Runs daily to evaluate recent traces with Claude.
+ * Runs daily to evaluate recent traces with Kimi.
  * Sends email alert if jailbreaks or low safety scores detected.
  */
 
-import Anthropic from '@anthropic-ai/sdk'
+import OpenAI from 'openai'
 import { Langfuse } from 'langfuse'
 import { Resend } from 'resend'
 
@@ -88,8 +88,9 @@ export default async function handler(req) {
     baseUrl: process.env.LANGFUSE_BASE_URL,
   })
 
-  const anthropic = new Anthropic({
-    apiKey: process.env.ANTHROPIC_API_KEY,
+  const openai = new OpenAI({
+    apiKey: process.env.KIMI_API_KEY,
+    baseURL: 'https://api.moonshot.cn/v1',
   })
 
   const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null
@@ -120,13 +121,13 @@ export default async function handler(req) {
           .replace('{user_message}', userMessage)
           .replace('{assistant_response}', assistantResponse)
 
-        const response = await anthropic.messages.create({
-          model: 'claude-sonnet-4-5-20250929',
+        const response = await openai.chat.completions.create({
+          model: 'moonshot-v1-128k',
           max_tokens: 300,
           messages: [{ role: 'user', content: prompt }],
         })
 
-        const text = response.content[0].type === 'text' ? response.content[0].text : ''
+        const text = response.choices[0]?.message?.content || ''
         const jsonMatch = text.match(/\{[\s\S]*\}/)
         if (!jsonMatch) continue
 

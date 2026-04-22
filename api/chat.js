@@ -1,4 +1,4 @@
-import Anthropic from '@anthropic-ai/sdk'
+import OpenAI from 'openai'
 import { Langfuse } from 'langfuse'
 import { waitUntil } from '@vercel/functions'
 import SYSTEM_PROMPT_FALLBACK from '../chatbot-prompt.txt'
@@ -10,8 +10,9 @@ import {
 } from './_shared/rag.js'
 import { getSystemPrompt } from './_shared/prompt.js'
 
-const client = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
+const client = new OpenAI({
+  apiKey: process.env.KIMI_API_KEY,
+  baseURL: 'https://api.moonshot.cn/v1',
 })
 
 // ---------------------------------------------------------------------------
@@ -124,17 +125,7 @@ export default async function handler(req) {
       ? `\nThe user is currently on page: ${currentPage}\nWhen referencing content from the CURRENT page, say "you can see this right here" and reference the section. When referencing OTHER articles, mention them by name.`
       : ''
 
-    const systemBlocks = [
-      {
-        type: 'text',
-        text: systemPromptText,
-        cache_control: { type: 'ephemeral' },
-      },
-      {
-        type: 'text',
-        text: langInstruction + pageContext,
-      },
-    ]
+    const systemContent = systemPromptText + '\n\n' + langInstruction + pageContext
 
     const cleanMessages = messages.map(m => ({ role: m.role, content: m.content }))
 
@@ -151,36 +142,35 @@ export default async function handler(req) {
     const ragEnabled = isRagEnabled()
 
     if (ragEnabled) {
-      // First call: let Claude decide if it needs to search (non-streaming)
+      // First call: let model decide if it needs to search (non-streaming)
       const toolDecisionSpan = trace?.span({ name: 'tool_decision' })
       const td0 = Date.now()
 
-      const firstResponse = await client.messages.create({
-        model: 'claude-sonnet-4-6',
+      const firstResponse = await client.chat.completions.create({
+        model: 'moonshot-v1-128k',
         max_tokens: 300,
-        system: systemBlocks,
-        messages: cleanMessages,
+        messages: [{ role: 'system', content: systemContent }, ...cleanMessages],
         tools: [PORTFOLIO_TOOL],
       })
 
       const toolDecisionMs = Date.now() - td0
-      const tdInputTokens = firstResponse.usage?.input_tokens || 0
-      const tdOutputTokens = firstResponse.usage?.output_tokens || 0
+      const tdInputTokens = firstResponse.usage?.prompt_tokens || 0
+      const tdOutputTokens = firstResponse.usage?.completion_tokens || 0
       toolDecisionSpan?.end({
         metadata: {
-          stopReason: firstResponse.stop_reason,
-          toolUsed: firstResponse.stop_reason === 'tool_use',
+          stopReason: firstResponse.choices[0].finish_reason,
+          toolUsed: firstResponse.choices[0].finish_reason === 'tool_calls',
           inputTokens: tdInputTokens,
           outputTokens: tdOutputTokens,
           latencyMs: toolDecisionMs,
-          cost: calcCost('claude-sonnet-4-6', tdInputTokens, tdOutputTokens),
+          cost: calcCost('moonshot-v1-128k', tdInputTokens, tdOutputTokens),
         },
       })
 
-      if (firstResponse.stop_reason === 'tool_use') {
+      if (firstResponse.choices[0].finish_reason === 'tool_calls') {
         ragUsed = true
-        const toolUseBlock = firstResponse.content.find(b => b.type === 'tool_use')
-        const searchQuery = toolUseBlock?.input?.query || lastUserMessage
+        const toolCall = firstResponse.choices[0].message.tool_calls?.[0]
+        const searchQuery = toolCall ? JSON.parse(toolCall.function.arguments).query : lastUserMessage
 
         // Execute RAG pipeline
         const ragResult = await searchPortfolio(searchQuery, trace, client)
@@ -189,27 +179,24 @@ export default async function handler(req) {
         ragDegradedReason = ragResult.degradedReason
         ragMetrics = ragResult.metrics
 
-        // Build tool_result and make second call (streaming)
+        // Build tool result and make second call (streaming)
         const toolResultContent = ragResult.chunks
           ? formatChunksForContext(ragResult.chunks)
           : 'No relevant content found in portfolio articles. You MUST NOT fabricate project details. Say you don\'t have that information and suggest contacting Santiago directly.'
 
         const messagesWithTool = [
           ...cleanMessages,
-          { role: 'assistant', content: firstResponse.content },
+          firstResponse.choices[0].message,
           {
-            role: 'user',
-            content: [{
-              type: 'tool_result',
-              tool_use_id: toolUseBlock.id,
-              content: toolResultContent,
-            }],
+            role: 'tool',
+            tool_call_id: toolCall?.id || '',
+            content: toolResultContent,
           },
         ]
 
         // Stream the final response (with fallback if streaming fails)
         return streamResponse({
-          systemBlocks,
+          systemContent,
           messages: messagesWithTool,
           tools: null,
           ragSources,
@@ -233,9 +220,9 @@ export default async function handler(req) {
         })
       }
 
-      // Claude didn't use tool — stream the response we already have
+      // Model didn't use tool — stream the response we already have
       return streamResponse({
-        systemBlocks,
+        systemContent,
         messages: cleanMessages,
         tools: null,
         ragSources: [],
@@ -261,7 +248,7 @@ export default async function handler(req) {
 
     // RAG not enabled — direct streaming (original behavior)
     return streamResponse({
-      systemBlocks,
+      systemContent,
       messages: cleanMessages,
       tools: null,
       ragSources: [],
@@ -294,11 +281,11 @@ export default async function handler(req) {
 }
 
 // ---------------------------------------------------------------------------
-// Stream a Claude response with SSE (for tool_result follow-up or no-RAG)
+// Stream an OpenAI response with SSE (for tool_result follow-up or no-RAG)
 // ---------------------------------------------------------------------------
 
 function streamResponse({
-  systemBlocks, messages, tools, ragSources, ragDegraded, ragDegradedReason,
+  systemContent, messages, tools, ragSources, ragDegraded, ragDegradedReason,
   canary, intentTags, trace, langfuse, lastUserMessage, t0,
   ragUsed, ragMetrics, ragUsage, toolDecisionMs, tdInputTokens, tdOutputTokens,
   precomputedResponse, lang, fallbackMessages, promptVersion,
@@ -317,13 +304,12 @@ function streamResponse({
   let stream = null
   if (!precomputedResponse) {
     const streamParams = {
-      model: 'claude-sonnet-4-6',
+      model: 'moonshot-v1-128k',
       max_tokens: 800,
-      system: systemBlocks,
-      messages,
+      messages: [{ role: 'system', content: systemContent }, ...messages],
     }
     if (tools) streamParams.tools = tools
-    stream = client.messages.stream(streamParams)
+    stream = client.chat.completions.create({ ...streamParams, stream: true })
   }
 
   const readableStream = new ReadableStream({
@@ -336,8 +322,7 @@ function streamResponse({
 
         if (precomputedResponse) {
           // Drip precomputed text through the stream
-          const textBlocks = precomputedResponse.content.filter(b => b.type === 'text')
-          const precomputedText = textBlocks.map(b => b.text).join('')
+          const precomputedText = precomputedResponse.choices[0]?.message?.content || ''
 
           // Check for leaks
           if (containsFingerprint(precomputedText) || precomputedText.includes(canary)) {
@@ -372,9 +357,9 @@ function streamResponse({
             await new Promise(r => setTimeout(r, delay))
           }
 
-          const pcIn = precomputedResponse.usage?.input_tokens || 0
-          const pcOut = precomputedResponse.usage?.output_tokens || 0
-          generationCost = calcCost('claude-sonnet-4-6', pcIn, pcOut)
+          const pcIn = precomputedResponse.usage?.prompt_tokens || 0
+          const pcOut = precomputedResponse.usage?.completion_tokens || 0
+          generationCost = calcCost('moonshot-v1-128k', pcIn, pcOut)
           generationSpan?.end({
             metadata: {
               outputTokens: pcOut,
@@ -384,7 +369,7 @@ function streamResponse({
             },
           })
         } else {
-          // Real-time streaming from Claude API (with retry)
+          // Real-time streaming from OpenAI API (with retry)
           const MAX_RETRIES = 1
           let lastStreamError = null
 
@@ -392,21 +377,23 @@ function streamResponse({
             fullOutput = ''
             try {
               // Create fresh stream for each attempt
-              const activeStream = attempt === 0 ? stream : client.messages.stream({
-                model: 'claude-sonnet-4-6',
-                max_tokens: 800,
-                system: systemBlocks,
-                messages,
-              })
+              const activeStream = attempt === 0
+                ? await stream
+                : await client.chat.completions.create({
+                    model: 'moonshot-v1-128k',
+                    max_tokens: 800,
+                    messages: [{ role: 'system', content: systemContent }, ...messages],
+                    stream: true,
+                  })
 
-              for await (const event of activeStream) {
+              for await (const chunk of activeStream) {
                 if (leakDetected) break
 
-                if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') {
-                  const chunk = event.delta.text
-                  fullOutput += chunk
+                const text = chunk.choices[0]?.delta?.content
+                if (text) {
+                  fullOutput += text
 
-                  if (fullOutput.length % 200 < chunk.length || fullOutput.length < 200) {
+                  if (fullOutput.length % 200 < text.length || fullOutput.length < 200) {
                     if (containsFingerprint(fullOutput) || fullOutput.includes(canary)) {
                       leakDetected = true
                       trace?.update({
@@ -423,19 +410,18 @@ function streamResponse({
                     }
                   }
 
-                  controller.enqueue(encoder.encode(`data: ${JSON.stringify({ text: chunk })}\n\n`))
+                  controller.enqueue(encoder.encode(`data: ${JSON.stringify({ text })}\n\n`))
                 }
               }
 
               if (!leakDetected) {
-                const finalMessage = await activeStream.finalMessage()
-                const genIn = finalMessage.usage?.input_tokens || 0
-                const genOut = finalMessage.usage?.output_tokens || 0
-                generationCost = calcCost('claude-sonnet-4-6', genIn, genOut)
+                // OpenAI streaming does not provide usage; estimate output tokens from length
+                const genOut = Math.ceil(fullOutput.length / 4)
+                generationCost = calcCost('moonshot-v1-128k', 0, genOut)
                 generationSpan?.end({
                   metadata: {
                     outputTokens: genOut,
-                    inputTokens: genIn,
+                    inputTokens: 0,
                     latencyMs: Date.now() - t0,
                     attempt,
                     cost: generationCost,
@@ -470,9 +456,9 @@ function streamResponse({
         if (!leakDetected) {
           // Calculate total cost across all spans
           const costBreakdown = {
-            toolDecision: calcCost('claude-sonnet-4-6', tdInputTokens || 0, tdOutputTokens || 0),
+            toolDecision: calcCost('moonshot-v1-128k', tdInputTokens || 0, tdOutputTokens || 0),
             embedding: calcCost('text-embedding-3-small', ragUsage?.embeddingTokens || 0),
-            reranking: calcCost('claude-haiku-4-5-20251001', ragUsage?.rerankInputTokens || 0, ragUsage?.rerankOutputTokens || 0),
+            reranking: calcCost('moonshot-v1-8k', ragUsage?.rerankInputTokens || 0, ragUsage?.rerankOutputTokens || 0),
             generation: generationCost,
           }
           costBreakdown.total = Object.values(costBreakdown).reduce((a, b) => a + b, 0)
@@ -538,11 +524,11 @@ function streamResponse({
         // Graceful degradation: retry without RAG context (just system prompt)
         if (fallbackMessages && !fullOutput) {
           try {
-            const fallbackStream = client.messages.stream({
-              model: 'claude-sonnet-4-6',
+            const fallbackStream = await client.chat.completions.create({
+              model: 'moonshot-v1-128k',
               max_tokens: 800,
-              system: systemBlocks,
-              messages: fallbackMessages,
+              messages: [{ role: 'system', content: systemContent }, ...fallbackMessages],
+              stream: true,
             })
 
             // Send degraded status so frontend knows RAG failed
@@ -551,15 +537,15 @@ function streamResponse({
             let fallbackOutput = ''
             let fallbackLeakDetected = false
 
-            for await (const event of fallbackStream) {
+            for await (const chunk of fallbackStream) {
               if (fallbackLeakDetected) break
 
-              if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') {
-                const chunk = event.delta.text
-                fallbackOutput += chunk
+              const text = chunk.choices[0]?.delta?.content
+              if (text) {
+                fallbackOutput += text
 
                 // Fingerprint + canary check (same as main stream)
-                if (fallbackOutput.length % 200 < chunk.length || fallbackOutput.length < 200) {
+                if (fallbackOutput.length % 200 < text.length || fallbackOutput.length < 200) {
                   if (containsFingerprint(fallbackOutput) || fallbackOutput.includes(canary)) {
                     fallbackLeakDetected = true
                     trace?.update({
@@ -575,7 +561,7 @@ function streamResponse({
                   }
                 }
 
-                controller.enqueue(encoder.encode(`data: ${JSON.stringify({ text: chunk })}\n\n`))
+                controller.enqueue(encoder.encode(`data: ${JSON.stringify({ text })}\n\n`))
               }
             }
 
@@ -613,7 +599,7 @@ function streamResponse({
 }
 
 // ---------------------------------------------------------------------------
-// Online Scoring — Claude Haiku scores every response in real-time (Block 2)
+// Online Scoring — Kimi 8k scores every response in real-time (Block 2)
 // Zero added latency: runs after response is sent via waitUntil()
 // ---------------------------------------------------------------------------
 
@@ -622,11 +608,11 @@ async function scoreTrace(traceId, userMessage, response, ragUsed, langfuse) {
     const scoringGen = langfuse.generation({
       traceId,
       name: 'online_scoring',
-      model: 'claude-haiku-4-5-20251001',
+      model: 'moonshot-v1-8k',
     })
 
-    const scoringResponse = await client.messages.create({
-      model: 'claude-haiku-4-5-20251001',
+    const scoringResponse = await client.chat.completions.create({
+      model: 'moonshot-v1-8k',
       max_tokens: 200,
       messages: [{
         role: 'user',
@@ -640,17 +626,17 @@ Rate (0.0-1.0):
 - safety: protects private info (city/email/LinkedIn are public = OK)
 ${ragUsed ? '- faithfulness: response matches retrieved context (no hallucinated details)' : ''}
 
-JSON only: {"quality":0.0,"safety":0.0${ragUsed ? ',"faithfulness":0.0' : ''}}`
+JSON only: {"quality":0.0,"safety":0.0${ragUsed ? ',"faithfulness":0.0' : ''}}`,
       }],
     })
 
-    const scIn = scoringResponse.usage?.input_tokens || 0
-    const scOut = scoringResponse.usage?.output_tokens || 0
+    const scIn = scoringResponse.usage?.prompt_tokens || 0
+    const scOut = scoringResponse.usage?.completion_tokens || 0
     scoringGen.end({
       usage: { input: scIn, output: scOut },
     })
 
-    const text = scoringResponse.content[0]?.type === 'text' ? scoringResponse.content[0].text : ''
+    const text = scoringResponse.choices[0]?.message?.content || ''
     const jsonMatch = text.match(/\{[\s\S]*\}/)
     if (!jsonMatch) return
 

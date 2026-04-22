@@ -1,4 +1,4 @@
-import Anthropic from '@anthropic-ai/sdk'
+import OpenAI from 'openai'
 import { Langfuse } from 'langfuse'
 import {
   searchPortfolio, formatChunksForContext, extractSources, calcCost,
@@ -10,8 +10,9 @@ export const config = {
   runtime: 'edge',
 }
 
-const client = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
+const client = new OpenAI({
+  apiKey: process.env.KIMI_API_KEY,
+  baseURL: 'https://api.moonshot.cn/v1',
 })
 
 let langfuseClient = null
@@ -27,54 +28,51 @@ function getLangfuse() {
 }
 
 // ---------------------------------------------------------------------------
-// Claude reasoning layer — turns raw RAG chunks into a verified answer
+// Kimi reasoning layer — turns raw RAG chunks into a verified answer
 // ---------------------------------------------------------------------------
 
 const VOICE_OVERRIDE = `Respuesta para conversación hablada. Max 2-3 frases. Sin markdown ni links. Lenguaje natural hablado. Sé preciso con datos del contexto — nunca inventes. SIEMPRE habla en PRIMERA PERSONA como Santiago — nunca en tercera persona ("Santiago hizo..."), sino "Yo hice...", "Construí...", "Mi proyecto...".`
 
-async function reasonWithClaude(query, formattedChunks, span, langfuse) {
+async function reasonWithKimi(query, formattedChunks, span, langfuse) {
   const t0 = Date.now()
-  const reasoningSpan = span?.span({ name: 'claude-reasoning', metadata: { query } })
+  const reasoningSpan = span?.span({ name: 'kimi-reasoning', metadata: { query } })
 
   try {
     const { text: systemPromptText } = await getSystemPrompt(langfuse)
 
     const response = await Promise.race([
-      client.messages.create({
-        model: 'claude-sonnet-4-6',
+      client.chat.completions.create({
+        model: 'moonshot-v1-128k',
         max_tokens: 300,
-        system: `${systemPromptText}\n\n${VOICE_OVERRIDE}`,
         messages: [
+          { role: 'system', content: `${systemPromptText}\n\n${VOICE_OVERRIDE}` },
           { role: 'user', content: query },
           {
             role: 'assistant',
-            content: [{
-              type: 'tool_use',
+            content: '',
+            tool_calls: [{
               id: 'voice_rag_call',
-              name: 'search_portfolio',
-              input: { query },
+              type: 'function',
+              function: {
+                name: 'search_portfolio',
+                arguments: JSON.stringify({ query }),
+              },
             }],
           },
           {
-            role: 'user',
-            content: [{
-              type: 'tool_result',
-              tool_use_id: 'voice_rag_call',
-              content: formattedChunks,
-            }],
+            role: 'tool',
+            tool_call_id: 'voice_rag_call',
+            content: formattedChunks,
           },
         ],
       }),
-      new Promise((_, reject) => setTimeout(() => reject(new Error('Claude reasoning timeout (>3s)')), 3000)),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('Kimi reasoning timeout (>3s)')), 3000)),
     ])
 
-    const answer = response.content
-      .filter(b => b.type === 'text')
-      .map(b => b.text)
-      .join('')
+    const answer = response.choices[0]?.message?.content || ''
 
-    const inputTokens = response.usage?.input_tokens || 0
-    const outputTokens = response.usage?.output_tokens || 0
+    const inputTokens = response.usage?.prompt_tokens || 0
+    const outputTokens = response.usage?.completion_tokens || 0
     const latencyMs = Date.now() - t0
 
     reasoningSpan?.end({
@@ -82,7 +80,7 @@ async function reasonWithClaude(query, formattedChunks, span, langfuse) {
         inputTokens,
         outputTokens,
         latencyMs,
-        cost: calcCost('claude-sonnet-4-6', inputTokens, outputTokens),
+        cost: calcCost('moonshot-v1-128k', inputTokens, outputTokens),
       },
     })
 
@@ -146,14 +144,14 @@ export default async function handler(req) {
         },
       })
 
-      // Latency budget: skip Claude reasoning if RAG already took >1.5s
+      // Latency budget: skip Kimi reasoning if RAG already took >1.5s
       const ragElapsedMs = Date.now() - t0
       const reasonedAnswer = (ragResult.chunks && ragElapsedMs <= 1500)
-        ? await reasonWithClaude(query, formattedChunks, trace, langfuse)
+        ? await reasonWithKimi(query, formattedChunks, trace, langfuse)
         : null
 
-      // Tier 1: Claude + RAG → reasoned answer
-      // Tier 2: RAG only (Claude failed) → raw chunks
+      // Tier 1: Kimi + RAG → reasoned answer
+      // Tier 2: RAG only (Kimi failed) → raw chunks
       // Tier 3: both failed → handled by catch below
       const context = reasonedAnswer || formattedChunks
 

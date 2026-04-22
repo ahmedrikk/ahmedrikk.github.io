@@ -7,8 +7,8 @@
 // ---------------------------------------------------------------------------
 
 export const MODEL_COSTS = {
-  'claude-sonnet-4-6': { input: 3.0 / 1e6, output: 15.0 / 1e6 },
-  'claude-haiku-4-5-20251001': { input: 0.25 / 1e6, output: 1.25 / 1e6 },
+  'moonshot-v1-128k': { input: 60.0 / 1e6, output: 60.0 / 1e6 },
+  'moonshot-v1-8k': { input: 60.0 / 1e6, output: 60.0 / 1e6 },
   'text-embedding-3-small': { input: 0.02 / 1e6 },
 }
 
@@ -26,17 +26,20 @@ export function isRagEnabled() {
 }
 
 export const PORTFOLIO_TOOL = {
-  name: 'search_portfolio',
-  description: "Search your own published case studies for project details. You wrote these articles — they are YOUR words about YOUR projects. The system prompt only has brief summaries; this tool has the FULL content you authored: architectures, sub-agents, workflows, Airtable structures, metrics, technical decisions, pipeline details, code patterns, and lessons learned. Use this whenever the user asks for specifics about any project. Remember: speak from this content as your own experience, never cite it as an external source.",
-  input_schema: {
-    type: 'object',
-    properties: {
-      query: {
-        type: 'string',
-        description: 'The search query to find relevant portfolio content',
+  type: 'function',
+  function: {
+    name: 'search_portfolio',
+    description: "Search your own published case studies for project details. You wrote these articles — they are YOUR words about YOUR projects. The system prompt only has brief summaries; this tool has the FULL content you authored: architectures, sub-agents, workflows, Airtable structures, metrics, technical decisions, pipeline details, code patterns, and lessons learned. Use this whenever the user asks for specifics about any project. Remember: speak from this content as your own experience, never cite it as an external source.",
+    parameters: {
+      type: 'object',
+      properties: {
+        query: {
+          type: 'string',
+          description: 'The search query to find relevant portfolio content',
+        },
       },
+      required: ['query'],
     },
-    required: ['query'],
   },
 }
 
@@ -122,10 +125,10 @@ export async function searchDocuments(queryText, queryEmbedding) {
 }
 
 // ---------------------------------------------------------------------------
-// RAG: re-rank top-10 → top-3 with Haiku
+// RAG: re-rank top-10 → top-3 with Kimi 8k
 // ---------------------------------------------------------------------------
 
-export async function rerankChunks(query, chunks, anthropicClient) {
+export async function rerankChunks(query, chunks, openaiClient) {
   if (chunks.length <= 3) return { chunks, latencyMs: 0, rerankedOrder: null, usage: null }
 
   const t0 = Date.now()
@@ -134,8 +137,8 @@ export async function rerankChunks(query, chunks, anthropicClient) {
       `[${i}] ${c.content.slice(0, 200)}`
     ).join('\n')
 
-    const response = await anthropicClient.messages.create({
-      model: 'claude-haiku-4-5-20251001',
+    const response = await openaiClient.chat.completions.create({
+      model: 'moonshot-v1-8k',
       max_tokens: 50,
       messages: [{
         role: 'user',
@@ -143,11 +146,11 @@ export async function rerankChunks(query, chunks, anthropicClient) {
       }],
     })
 
-    const text = response.content[0]?.type === 'text' ? response.content[0].text : ''
+    const text = response.choices[0]?.message?.content || ''
     const ids = text.match(/\d+/g)?.map(Number).filter(n => n < chunks.length) || []
 
     const ranked = ids.slice(0, 5).map(i => chunks[i])
-    // Fill up to 5 if Haiku returned fewer
+    // Fill up to 5 if model returned fewer
     while (ranked.length < 5 && ranked.length < chunks.length) {
       const next = chunks.find(c => !ranked.includes(c))
       if (next) ranked.push(next)
@@ -159,7 +162,7 @@ export async function rerankChunks(query, chunks, anthropicClient) {
 
     return {
       chunks: diversified, latencyMs: Date.now() - t0, rerankedOrder: ids.slice(0, 5),
-      usage: { input_tokens: response.usage?.input_tokens || 0, output_tokens: response.usage?.output_tokens || 0 },
+      usage: { input_tokens: response.usage?.prompt_tokens || 0, output_tokens: response.usage?.completion_tokens || 0 },
     }
   } catch {
     // Fallback: use original order with diversity
@@ -296,7 +299,7 @@ export function detectMentionedArticles(responseText) {
 // RAG: full agentic search pipeline
 // ---------------------------------------------------------------------------
 
-export async function searchPortfolio(query, trace, anthropicClient) {
+export async function searchPortfolio(query, trace, openaiClient) {
   const result = {
     chunks: null,
     sources: [],
@@ -351,8 +354,8 @@ export async function searchPortfolio(query, trace, anthropicClient) {
     }
 
     // 3. Re-rank
-    const rerankGen = trace?.generation({ name: 'reranking', model: 'claude-haiku-4-5-20251001', metadata: { query } })
-    const rerankResult = await rerankChunks(query, filteredChunks, anthropicClient)
+    const rerankGen = trace?.generation({ name: 'reranking', model: 'moonshot-v1-8k', metadata: { query } })
+    const rerankResult = await rerankChunks(query, filteredChunks, openaiClient)
     result.metrics.rerankMs = rerankResult.latencyMs
     if (rerankResult.usage) {
       result.usage.rerankInputTokens = rerankResult.usage.input_tokens
