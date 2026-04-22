@@ -94,37 +94,37 @@ button, a, [role="button"], summary { cursor: pointer; }
    ============================================ */
 
 @layer base {
-  /* ========== PROFILE: CYBER (Default) - Cyan/Purple ========== */
+  /* ========== PROFILE: AMBER GOLD (Default) - Film Warmth ========== */
   :root {
     --background: 220 6% 96%;
     --foreground: 240 10% 4%;
     --muted: 220 6% 86%;
     --muted-foreground: 240 5% 28%;
-    --primary: 187 74% 28%;
+    --primary: 43 74% 28%;
     --primary-foreground: 0 0% 100%;
-    --accent: 270 70% 38%;
+    --accent: 25 70% 38%;
     --accent-foreground: 0 0% 100%;
     --border: 240 6% 85%;
     --card: 0 0% 100%;
     --card-foreground: 240 10% 4%;
-    /* Gradient colors for chat/buttons */
-    --gradient-from: 187 86% 53%; /* cyan-400 */
-    --gradient-to: 270 91% 65%;   /* purple-500 */
+    /* Gradient colors for chat/buttons - warm amber/gold */
+    --gradient-from: 43 86% 53%;
+    --gradient-to: 25 91% 55%;
     /* Semantic accent colors */
     --gold: 43 76% 38%;
     --success: 142 72% 29%;
-    --tool: 187 72% 30%;
+    --tool: 43 72% 30%;
     --linkedin: 210 91% 40%;       /* #0A66C2 */
     --codeblock: 210 17% 95%;      /* #F1F5F9 - slate-100 */
     --codeblock-text: 215 25% 17%; /* #1E293B - slate-800 */
-    --code-keyword: 210 60% 40%;   /* blue */
+    --code-keyword: 43 60% 40%;    /* amber */
     --code-string: 25 70% 45%;     /* orange */
     --code-comment: 210 10% 55%;   /* gray */
     --code-number: 30 70% 45%;     /* amber */
-    --code-heading: 190 60% 35%;   /* teal */
-    --code-var: 270 50% 45%;       /* purple */
-    --hero-orb-primary: 187 74% 28% / 0.15;
-    --hero-orb-accent: 270 70% 38% / 0.12;
+    --code-heading: 43 60% 35%;    /* amber */
+    --code-var: 25 50% 45%;        /* warm orange */
+    --hero-orb-primary: 43 74% 28% / 0.15;
+    --hero-orb-accent: 25 70% 38% / 0.12;
     --dot-grid: 240 5% 35% / 0.25;
   }
 
@@ -135,29 +135,29 @@ button, a, [role="button"], summary { cursor: pointer; }
       --foreground: 0 0% 93%;
       --muted: 240 4% 14%;
       --muted-foreground: 240 5% 65%;
-      --primary: 187 86% 53%;
+      --primary: 43 86% 53%;
       --primary-foreground: 240 10% 4%;
-      --accent: 270 91% 78%;
+      --accent: 25 91% 65%;
       --accent-foreground: 0 0% 100%;
       --border: 240 4% 20%;
       --card: 240 5% 13%;
       --card-foreground: 0 0% 93%;
-      --gradient-from: 187 86% 53%;
-      --gradient-to: 270 91% 78%;
+      --gradient-from: 43 86% 53%;
+      --gradient-to: 25 91% 65%;
       --gold: 45 97% 49%;
       --success: 142 71% 45%;
-      --tool: 187 92% 50%;
+      --tool: 43 92% 50%;
       --linkedin: 210 88% 71%;
       --codeblock: 215 19% 5%;       /* #0D1117 - GitHub Dark */
       --codeblock-text: 213 14% 90%; /* #E6EDF3 */
-      --code-keyword: 210 100% 75%;  /* #79C0FF */
+      --code-keyword: 43 100% 75%;   /* amber */
       --code-string: 24 80% 65%;     /* #FFA657 */
       --code-comment: 213 10% 55%;   /* #8B949E */
       --code-number: 30 85% 65%;     /* #E3B341 */
-      --code-heading: 210 100% 75%;  /* #79C0FF */
-      --code-var: 270 70% 75%;       /* #D2A8FF */
-      --hero-orb-primary: 187 86% 53% / 0.08;
-      --hero-orb-accent: 270 91% 70% / 0.10;
+      --code-heading: 43 100% 75%;   /* amber */
+      --code-var: 25 70% 75%;        /* warm orange */
+      --hero-orb-primary: 43 86% 53% / 0.08;
+      --hero-orb-accent: 25 91% 70% / 0.10;
       --dot-grid: 240 5% 65% / 0.15;
     }
   }
@@ -168,22 +168,22 @@ button, a, [role="button"], summary { cursor: pointer; }
     --foreground: 0 0% 93%;         /* off-white, easier on eyes */
     --muted: 240 4% 14%;            /* slightly lighter for hierarchy */
     --muted-foreground: 240 5% 65%;
-    --primary: 187 86% 53%;
+    --primary: 43 86% 53%;          /* warm amber/gold #D4A017 */
     --primary-foreground: 240 10% 4%;
-    --accent: 270 91% 70%;
+    --accent: 25 91% 70%;           /* warm orange */
     --accent-foreground: 0 0% 100%;
     --border: 240 4% 20%;           /* more visible borders */
     --card: 240 5% 13%;             /* elevated above background */
     --card-foreground: 0 0% 93%;
-    --gradient-from: 187 86% 53%;
-    --gradient-to: 270 91% 78%;
+    --gradient-from: 43 86% 53%;
+    --gradient-to: 25 91% 70%;
     /* Semantic accent colors */
     --gold: 45 97% 49%;
     --success: 142 71% 45%;
-    --tool: 187 92% 50%;
+    --tool: 43 92% 50%;
     --linkedin: 210 88% 71%;       /* #70B5F9 - lighter for dark bg */
-    --hero-orb-primary: 187 86% 53% / 0.08;
-    --hero-orb-accent: 270 91% 70% / 0.10;
+    --hero-orb-primary: 43 86% 53% / 0.08;
+    --hero-orb-accent: 25 91% 70% / 0.10;
     --dot-grid: 240 5% 65% / 0.15;
     --codeblock: 215 19% 5%;       /* #0D1117 - GitHub Dark */
     --codeblock-text: 213 14% 90%; /* #E6EDF3 */
@@ -201,21 +201,21 @@ button, a, [role="button"], summary { cursor: pointer; }
     --foreground: 240 10% 4%;
     --muted: 220 6% 86%;
     --muted-foreground: 240 5% 28%;
-    --primary: 187 74% 28%;
+    --primary: 43 74% 28%;
     --primary-foreground: 0 0% 100%;
-    --accent: 270 70% 38%;
+    --accent: 25 70% 38%;
     --accent-foreground: 0 0% 100%;
     --border: 240 6% 85%;
     --card: 0 0% 100%;
     --card-foreground: 240 10% 4%;
-    --gradient-from: 187 86% 53%;
-    --gradient-to: 270 91% 65%;
+    --gradient-from: 43 86% 53%;
+    --gradient-to: 25 91% 65%;
     --gold: 43 76% 38%;
     --success: 142 72% 29%;
-    --tool: 187 72% 30%;
+    --tool: 43 72% 30%;
     --linkedin: 210 91% 40%;
-    --hero-orb-primary: 187 74% 28% / 0.15;
-    --hero-orb-accent: 270 70% 38% / 0.12;
+    --hero-orb-primary: 43 74% 28% / 0.15;
+    --hero-orb-accent: 25 70% 38% / 0.12;
     --dot-grid: 240 5% 35% / 0.25;
   }
 
