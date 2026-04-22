@@ -1,0 +1,20 @@
+# Ahmed Bin Athar (RIK)
+> Filmmaker, AI builder, and content strategist based in Chicago.
+
+## Work
+- Meta Reality Labs (via TekSystems): AI Content Evaluation, Nov 2025–Present
+- My Otaku World: Senior Content and Marketing Manager, Oct 2023–Nov 2025
+- Rikovations Pvt. Ltd.: Marketing Manager, Mar 2019–Mar 2022
+
+## Projects
+- QuranAI: RAG app with Claude API. Live at aiquran.live
+- Pixel Pulse: AI gaming news aggregator. React + Groq LLM + Supabase
+
+## Films
+- Rekhta (2024): Honorable Mention, Cine Pobre Film Festival
+- Mann Ki Hastam (2021): 15+ festival selections, Can 9 TV, 120K+ views
+
+## Contact
+- Email: ahmedrikk@gmail.com
+- LinkedIn: linkedin.com/in/ahmed-rik
+- GitHub: github.com/ahmedrikk

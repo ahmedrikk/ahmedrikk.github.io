@@ -162,7 +162,7 @@ export function buildJsonLdFromRegistry(
   const config = articleRegistry.find(a => a.id === articleId)
   if (!config?.seoMeta) throw new Error(`Article "${articleId}" not found in registry or missing seoMeta`)
 
-  const meta = config.seoMeta
+  const meta = config.seoMeta as any
   return buildArticleJsonLd({
     lang,
     url: `https://santifer.io/${i18n.slug}`,
