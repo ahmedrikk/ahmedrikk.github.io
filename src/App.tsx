@@ -1,11 +1,11 @@
-import { useState, useEffect, useCallback } from 'react'
-import { motion } from 'motion/react'
+import { useState, useEffect, useCallback, useRef } from 'react'
+import { motion, AnimatePresence } from 'motion/react'
 import {
   Mail, ExternalLink, Briefcase, Award,
   Users, Globe, Bot, Zap, FolderGit2, Sparkles, Linkedin, Github,
-  Youtube, ChevronRight, ArrowUp, MapPin, Calendar,
-  Heart, TrendingUp, Film, Clapperboard,
-  Terminal
+  Youtube, ArrowUp, MapPin, Calendar,
+  Heart, Film, Clapperboard,
+  Terminal, FileText, Menu, X
 } from 'lucide-react'
 import { translations, seo, type Translations } from './i18n'
 import { useHomeSeo } from './articles/use-article-seo'
@@ -57,25 +57,6 @@ export function AnimatedSection({
   )
 }
 
-function Badge({ children, variant = 'default' }: { children: React.ReactNode; variant?: 'default' | 'gold' | 'live' | 'outline' }) {
-  const base = 'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium'
-  const styles = {
-    default: 'bg-muted text-muted-foreground',
-    gold: 'bg-gold/10 text-gold border border-gold/20',
-    live: 'bg-success/10 text-success border border-success/30',
-    outline: 'border border-border text-muted-foreground',
-  }
-  return <span className={`${base} ${styles[variant]}`}>{children}</span>
-}
-
-function StatBadge({ children }: { children: React.ReactNode }) {
-  return (
-    <span className="inline-flex items-center px-2.5 py-0.5 rounded-md bg-gold/10 text-gold text-xs font-semibold border border-gold/20">
-      {children}
-    </span>
-  )
-}
-
 function SectionTitle({ children, id }: { children: React.ReactNode; id?: string }) {
   return (
     <h2
@@ -87,12 +68,250 @@ function SectionTitle({ children, id }: { children: React.ReactNode; id?: string
   )
 }
 
+/* ─── Typewriter Hook ─── */
+
+function useTypewriterRotation(roles: readonly string[], {
+  typeSpeed = 80,
+  deleteSpeed = 60,
+  pauseAfterType = 2000,
+  pauseAfterDelete = 300
+} = {}) {
+  const [displayText, setDisplayText] = useState(roles[0] || '')
+  const [roleIndex, setRoleIndex] = useState(0)
+  const rolesRef = useRef(roles)
+  rolesRef.current = roles
+
+  useEffect(() => {
+    if (roles.length === 0) return
+    let cancelled = false
+    let timeoutId: ReturnType<typeof setTimeout>
+
+    let currentIndex = 0
+    let currentText = roles[0] || ''
+    let isDeleting = false
+
+    const run = () => {
+      if (cancelled) return
+      const role = rolesRef.current[currentIndex]
+
+      if (!isDeleting) {
+        if (currentText.length < role.length) {
+          currentText = role.slice(0, currentText.length + 1)
+          setDisplayText(currentText)
+          timeoutId = setTimeout(run, typeSpeed)
+        } else {
+          timeoutId = setTimeout(() => {
+            isDeleting = true
+            run()
+          }, pauseAfterType)
+        }
+      } else {
+        if (currentText.length > 0) {
+          currentText = currentText.slice(0, -1)
+          setDisplayText(currentText)
+          timeoutId = setTimeout(run, deleteSpeed)
+        } else {
+          currentIndex = (currentIndex + 1) % rolesRef.current.length
+          setRoleIndex(currentIndex)
+          isDeleting = false
+          timeoutId = setTimeout(run, pauseAfterDelete)
+        }
+      }
+    }
+
+    run()
+
+    return () => {
+      cancelled = true
+      clearTimeout(timeoutId)
+    }
+  }, [roles.length, typeSpeed, deleteSpeed, pauseAfterType, pauseAfterDelete])
+
+  return { displayText, roleIndex }
+}
+
+/* ─── HomeToc ─── */
+
+const HOME_TOC_SECTIONS = [
+  { id: 'experience', label: 'Experience' },
+  { id: 'projects',  label: 'Projects' },
+  { id: 'speaking',  label: 'Sharing' },
+  { id: 'education', label: 'Education' },
+  { id: 'tech',      label: 'Skills & Stack' },
+  { id: 'contact',   label: 'Contact' },
+] as const
+
+function HomeToc() {
+  const [activeId, setActiveId] = useState<string | null>(null)
+  const [visible, setVisible] = useState(false)
+  const [mobileOpen, setMobileOpen] = useState(false)
+
+  useEffect(() => {
+    const experienceEl = document.getElementById('experience')
+    if (!experienceEl) return
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setVisible(entry.isIntersecting || entry.boundingClientRect.top < 100)
+      },
+      { rootMargin: '-10% 0px -80% 0px' }
+    )
+
+    observer.observe(experienceEl)
+    return () => observer.disconnect()
+  }, [])
+
+  useEffect(() => {
+    const sectionIds = HOME_TOC_SECTIONS.map(s =>
+      s.id === 'speaking' ? 'sharing' : s.id === 'tech' ? 'skills' : s.id
+    )
+    const elements = sectionIds
+      .map(id => document.getElementById(id))
+      .filter(Boolean) as HTMLElement[]
+    if (elements.length === 0) return
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            const id = entry.target.id
+            setActiveId(id === 'sharing' ? 'speaking' : id === 'skills' ? 'tech' : id)
+          }
+        }
+      },
+      { rootMargin: '-20% 0px -60% 0px' }
+    )
+
+    elements.forEach(el => observer.observe(el))
+    return () => observer.disconnect()
+  }, [])
+
+  const scrollTo = (id: string) => {
+    const targetId = id === 'speaking' ? 'sharing' : id === 'tech' ? 'skills' : id
+    const el = document.getElementById(targetId)
+    if (el) {
+      window.scrollTo({ top: el.offsetTop - 80, behavior: 'instant' })
+    }
+    setMobileOpen(false)
+  }
+
+  const activeIndex = HOME_TOC_SECTIONS.findIndex(s => s.id === activeId)
+
+  return (
+    <>
+      {/* Desktop sidebar */}
+      <nav
+        className={`hidden lg:flex fixed top-1/2 -translate-y-1/2 z-40 flex-col items-start transition-all duration-500 ${
+          visible ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-3 pointer-events-none'
+        }`}
+        style={{ left: 'max(1rem, calc(50% - 46rem))' }}
+      >
+        <div className="relative flex flex-col items-center gap-0">
+          {HOME_TOC_SECTIONS.map((section, i) => (
+            <div key={section.id} className="flex flex-col items-center">
+              <button
+                onClick={() => scrollTo(section.id)}
+                className="group flex items-center gap-3 py-1.5 text-sm transition-colors"
+              >
+                <span className={`relative flex items-center justify-center w-2.5 h-2.5 rounded-full transition-all duration-300 ${
+                  activeId === section.id
+                    ? 'bg-primary scale-125'
+                    : 'bg-muted-foreground/30 group-hover:bg-muted-foreground/60'
+                }`}>
+                  {activeId === section.id && (
+                    <motion.span
+                      className="absolute inset-0 rounded-full bg-primary"
+                      animate={{ scale: [1, 1.3, 1] }}
+                      transition={{ duration: 2, repeat: Infinity }}
+                      style={{ opacity: 0.3 }}
+                    />
+                  )}
+                </span>
+                <span className={`transition-colors ${
+                  activeId === section.id ? 'text-foreground font-medium' : 'text-muted-foreground group-hover:text-foreground'
+                }`}>
+                  {section.label}
+                </span>
+              </button>
+              {i < HOME_TOC_SECTIONS.length - 1 && (
+                <div className={`w-px h-3 transition-colors duration-500 ${
+                  i < activeIndex ? 'bg-primary' : 'bg-border'
+                }`} />
+              )}
+            </div>
+          ))}
+        </div>
+      </nav>
+
+      {/* Mobile floating button */}
+      <div className="lg:hidden">
+        <button
+          onClick={() => setMobileOpen(true)}
+          className={`fixed bottom-6 right-6 z-40 p-3 rounded-full bg-card border border-border shadow-lg transition-all ${
+            visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none'
+          }`}
+        >
+          <Menu className="w-5 h-5 text-foreground" />
+        </button>
+
+        <AnimatePresence>
+          {mobileOpen && (
+            <>
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="fixed inset-0 bg-black/40 z-40 backdrop-blur-sm"
+                onClick={() => setMobileOpen(false)}
+              />
+              <motion.div
+                initial={{ x: '100%' }}
+                animate={{ x: 0 }}
+                exit={{ x: '100%' }}
+                transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                className="fixed right-0 top-0 bottom-0 w-64 bg-card border-l border-border z-50 p-6 flex flex-col gap-2"
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <span className="font-display font-semibold text-foreground">Sections</span>
+                  <button onClick={() => setMobileOpen(false)} className="p-1 rounded-lg hover:bg-muted">
+                    <X className="w-5 h-5 text-muted-foreground" />
+                  </button>
+                </div>
+                {HOME_TOC_SECTIONS.map((section) => (
+                  <button
+                    key={section.id}
+                    onClick={() => scrollTo(section.id)}
+                    className={`text-left px-3 py-2.5 rounded-lg text-sm transition-colors ${
+                      activeId === section.id
+                        ? 'bg-primary/10 text-primary font-medium'
+                        : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                    }`}
+                  >
+                    {section.label}
+                  </button>
+                ))}
+              </motion.div>
+            </>
+          )}
+        </AnimatePresence>
+      </div>
+    </>
+  )
+}
+
 /* ─── Hero Section ─── */
 
 function HeroSection() {
+  const [hydrated, setHydrated] = useState(false)
   const scrollTo = useCallback((id: string) => {
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' })
   }, [])
+
+  useEffect(() => {
+    setHydrated(true)
+  }, [])
+
+  const { displayText: roleText, roleIndex } = useTypewriterRotation(t.greetingRoles)
 
   return (
     <section className="relative min-h-[90vh] flex flex-col justify-center px-6 md:px-12 lg:px-20 pt-24 pb-16 overflow-hidden">
@@ -124,9 +343,15 @@ function HeroSection() {
           transition={{ duration: 0.6, delay: 0.1 }}
           className="text-4xl md:text-6xl lg:text-7xl font-display font-bold text-foreground leading-tight mb-6"
         >
-          Award-winning filmmaker and{' '}
-          <span className="text-gradient-theme">AI builder</span>{' '}
-          who makes complex things feel human
+          <span className="text-gradient-theme">
+            {hydrated ? roleText : t.greetingRoles[0]}
+          </span>
+          {hydrated && (
+            <span
+              className="inline-block w-[3px] h-[0.85em] bg-primary ml-1 rounded-sm translate-y-[2px]"
+              style={{ animation: 'blink 1s step-end infinite' }}
+            />
+          )}
         </motion.h1>
 
         <motion.div
@@ -135,13 +360,17 @@ function HeroSection() {
           transition={{ duration: 0.5, delay: 0.25 }}
           className="flex flex-wrap gap-2 mb-8"
         >
-          {t.pillLabels.map((label) => (
-            <Badge key={label} variant="gold">
-              {label === 'QuranAI (live)' && <Zap className="w-3 h-3" />}
-              {label === '15+ festival selections' && <Film className="w-3 h-3" />}
-              {label === '120K+ views' && <TrendingUp className="w-3 h-3" />}
+          {t.pillLabels.map((label, i) => (
+            <span
+              key={label}
+              className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 backdrop-blur-sm ${
+                hydrated && i === roleIndex
+                  ? 'border border-[#D4A017] bg-[#D4A017]/15 text-foreground scale-105'
+                  : 'border border-[#D4A017]/30 bg-background/80 text-muted-foreground'
+              }`}
+            >
               {label}
-            </Badge>
+            </span>
           ))}
         </motion.div>
 
@@ -151,16 +380,13 @@ function HeroSection() {
           transition={{ duration: 0.5, delay: 0.35 }}
           className="space-y-4 text-muted-foreground text-lg max-w-2xl mb-10"
         >
-          <p>
-            At Meta Reality Labs I evaluate 500+ AI-generated creative assets weekly,
-            maintaining 85%+ quality scores through 2 promotions in 8 weeks.
-          </p>
-          <p>
-            Before that: 50+ client campaigns at Rikovations. A gaming media platform
-            grown 40% at My Otaku World. A RAG app serving communities that have
-            nowhere else to go. Four short films on international stages.
-          </p>
-          <p className="text-foreground font-medium">This still feels like day one.</p>
+          <p>{t.story.context}</p>
+          <p>{t.story.why}</p>
+          <div className="text-foreground font-medium space-y-1">
+            {t.story.seeking.map((line, i) => (
+              <p key={i}>{line}</p>
+            ))}
+          </div>
         </motion.div>
 
         <motion.div
@@ -198,7 +424,7 @@ function CompetenciesSection() {
   return (
     <section id="competencies" className="px-6 md:px-12 lg:px-20 py-16">
       <AnimatedSection>
-        <SectionTitle>Core Competencies</SectionTitle>
+        <SectionTitle>{t.coreCompetencies.title}</SectionTitle>
       </AnimatedSection>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {t.coreCompetencies.items.map((item, i) => (
@@ -220,37 +446,39 @@ function CompetenciesSection() {
 /* ─── Work Experience ─── */
 
 function ExperienceSection() {
+  const jobs = [
+    t.experience.meta,
+    t.experience.otakuWorld,
+    t.experience.rikovations,
+    t.experience.concordia,
+    t.experience.cotton,
+  ]
+
   return (
     <section id="experience" className="px-6 md:px-12 lg:px-20 py-16">
       <AnimatedSection>
-        <SectionTitle>Work Experience</SectionTitle>
+        <SectionTitle>{t.experience.title}</SectionTitle>
       </AnimatedSection>
-      <div className="space-y-8">
-        {t.experience.items.map((job, i) => (
+      <div className="space-y-12">
+        {jobs.map((job, i) => (
           <AnimatedSection key={job.company + job.period} delay={i * 0.1}>
-            <div className="p-6 rounded-2xl bg-card border border-border hover:border-primary/20 transition-colors">
-              <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-2 mb-4">
-                <div>
-                  <h3 className="font-display font-semibold text-lg text-foreground">{job.company}</h3>
-                  <p className="text-primary font-medium">{job.title}</p>
-                  {(job as any).industry && (
-                    <p className="text-xs text-muted-foreground mt-0.5">{(job as any).industry}</p>
-                  )}
+            <div className="mb-12">
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mb-2">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 shrink-0 rounded-lg bg-gradient-theme flex items-center justify-center text-white font-display font-bold text-sm">
+                    {job.company.charAt(0)}
+                  </div>
+                  <h3 className="font-display text-2xl font-bold text-foreground">{job.company}</h3>
                 </div>
-                <div className="flex items-center gap-1 text-sm text-muted-foreground whitespace-nowrap">
-                  <Calendar className="w-3.5 h-3.5" />
-                  {job.period}
-                </div>
+                <span className="text-sm text-muted-foreground">{job.location}</span>
               </div>
-              <div className="flex items-center gap-1 text-sm text-muted-foreground mb-4">
-                <MapPin className="w-3.5 h-3.5" />
-                {job.location}
-              </div>
-              <ul className="space-y-2">
-                {job.points.map((point, j) => (
-                  <li key={j} className="flex items-start gap-2 text-sm text-muted-foreground">
-                    <ChevronRight className="w-4 h-4 text-gold mt-0.5 shrink-0" />
-                    <span>{point}</span>
+              <p className="text-primary font-medium mb-1">{(job as any).role || (job as any).subtitle || ''}</p>
+              <p className="text-sm text-muted-foreground mb-4">{job.period}</p>
+              <ul className="text-sm text-muted-foreground space-y-2 mb-6">
+                {job.highlights.map((h, j) => (
+                  <li key={j} className="flex items-start gap-2">
+                    <span className="text-primary mt-1">•</span>
+                    <span>{h}</span>
                   </li>
                 ))}
               </ul>
@@ -265,73 +493,76 @@ function ExperienceSection() {
 /* ─── Projects ─── */
 
 function ProjectsSection() {
-  const statusIcon = (status: string) => {
-    if (status === 'Live Production' || status === 'Live') return <Zap className="w-3 h-3" />
-    if (status === 'Award-Winning Film') return <Film className="w-3 h-3" />
-    if (status === 'In Development') return <Clapperboard className="w-3 h-3" />
-    if (status === 'Active / Community') return <Users className="w-3 h-3" />
-    return <Briefcase className="w-3 h-3" />
-  }
-
-  const statusVariant = (status: string): Parameters<typeof Badge>[0]['variant'] => {
-    if (status === 'Live Production' || status === 'Live' || status === 'Active / Community') return 'live'
-    if (status === 'Award-Winning Film') return 'gold'
-    return 'outline'
-  }
-
   return (
     <section id="projects" className="px-6 md:px-12 lg:px-20 py-16">
       <AnimatedSection>
-        <SectionTitle>Projects</SectionTitle>
+        <SectionTitle>{t.projects.title}</SectionTitle>
       </AnimatedSection>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-        {t.projects.items.map((project, i) => (
-          <AnimatedSection key={project.name} delay={i * 0.08}>
-            <div className="h-full p-6 rounded-2xl bg-card border border-border hover:border-gold/30 transition-colors flex flex-col">
-              <div className="flex items-start justify-between gap-3 mb-3">
-                <h3 className="font-display font-semibold text-foreground">{project.name}</h3>
-                <Badge variant={statusVariant(project.status)}>
-                  {statusIcon(project.status)}
-                  {project.status}
-                </Badge>
-              </div>
-              <p className="text-sm text-muted-foreground leading-relaxed mb-4 flex-grow">
-                {project.description}
-              </p>
-              <div className="flex flex-wrap gap-1.5 mb-4">
-                {project.tags.map((tag) => (
-                  <span
-                    key={tag}
-                    className="px-2 py-0.5 rounded-md bg-muted text-muted-foreground text-xs"
-                  >
-                    {tag}
-                  </span>
-                ))}
-              </div>
-              <div className="flex flex-wrap gap-2 mb-4">
-                {project.stats.map((stat) => (
-                  <StatBadge key={stat}>{stat}</StatBadge>
-                ))}
-              </div>
-              {project.links.length > 0 && (
-                <div className="flex flex-wrap gap-3">
-                  {project.links.map((link) => (
-                    <a
-                      key={link.label}
-                      href={link.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1 text-sm text-primary hover:text-gold transition-colors"
+        {t.projects.items.map((project, i) => {
+          const href = project.linkUrl || (project.link ? `https://${project.link}` : null)
+          const isCode = project.link?.includes('github') || false
+          const linkLabel = project.linkUrl
+            ? t.projects.viewPrototype
+            : isCode
+            ? t.projects.viewCode
+            : t.projects.viewPrototype
+
+          return (
+            <AnimatedSection key={project.title} delay={i * 0.08}>
+              <div className="h-full p-6 rounded-2xl bg-card border border-border hover:border-gold/30 transition-colors flex flex-col">
+                <div className="flex items-start justify-between gap-3 mb-3">
+                  <h3 className="font-display font-semibold text-foreground">{project.title}</h3>
+                  {project.badge && (
+                    <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium ${
+                      project.badge === 'Live Production' || project.badge === 'Live' || project.badge === 'Active'
+                        ? 'bg-success/10 text-success border border-success/30'
+                        : project.badge === 'Award-Winning Film'
+                        ? 'bg-gold/10 text-gold border border-gold/20'
+                        : 'border border-border text-muted-foreground'
+                    }`}>
+                      {project.badge === 'Live Production' || project.badge === 'Live' ? <Zap className="w-3 h-3" /> : null}
+                      {project.badge === 'Award-Winning Film' ? <Film className="w-3 h-3" /> : null}
+                      {project.badge === 'In Development' ? <Clapperboard className="w-3 h-3" /> : null}
+                      {project.badge === 'Active' ? <Users className="w-3 h-3" /> : null}
+                      {project.badge}
+                    </span>
+                  )}
+                </div>
+                <p className="text-sm text-muted-foreground leading-relaxed mb-4 flex-grow">
+                  {project.desc}
+                </p>
+                <div className="flex flex-wrap gap-1.5 mb-4">
+                  {project.tech.map((tag) => (
+                    <span
+                      key={tag}
+                      className="px-2 py-0.5 rounded-md bg-muted text-muted-foreground text-xs"
                     >
-                      {link.label}
-                      <ExternalLink className="w-3 h-3" />
-                    </a>
+                      {tag}
+                    </span>
                   ))}
                 </div>
-              )}
-            </div>
-          </AnimatedSection>
-        ))}
+                {project.stars && (
+                  <div className="flex items-center gap-1.5 mb-3 text-sm text-gold">
+                    <span className="font-semibold">{project.stars}</span>
+                    <span className="text-muted-foreground text-xs">members</span>
+                  </div>
+                )}
+                {href && (
+                  <a
+                    href={href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-sm text-primary hover:text-gold transition-colors"
+                  >
+                    {linkLabel}
+                    <ExternalLink className="w-3 h-3" />
+                  </a>
+                )}
+              </div>
+            </AnimatedSection>
+          )
+        })}
       </div>
     </section>
   )
@@ -340,18 +571,47 @@ function ProjectsSection() {
 /* ─── Sharing / Social Proof ─── */
 
 function SharingSection() {
+  const typeIcon = (type: string) => {
+    switch (type) {
+      case 'film': return <Film className="w-4 h-4 text-gold" />
+      case 'award': return <Award className="w-4 h-4 text-gold" />
+      case 'project': return <Zap className="w-4 h-4 text-gold" />
+      case 'publication': return <FileText className="w-4 h-4 text-gold" />
+      case 'work': return <Briefcase className="w-4 h-4 text-gold" />
+      default: return <Sparkles className="w-4 h-4 text-gold" />
+    }
+  }
+
   return (
     <section id="sharing" className="px-6 md:px-12 lg:px-20 py-16">
       <AnimatedSection>
-        <SectionTitle>Sharing</SectionTitle>
-        <p className="text-muted-foreground mb-8 -mt-4">{t.sharing.subtitle}</p>
+        <SectionTitle>{t.sharing.title}</SectionTitle>
       </AnimatedSection>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {t.sharing.cards.map((card, i) => (
           <AnimatedSection key={card.title} delay={i * 0.06}>
             <div className="h-full p-5 rounded-2xl bg-card border border-border hover:border-gold/30 transition-colors">
-              <h3 className="font-display font-semibold text-foreground mb-2">{card.title}</h3>
+              <div className="flex items-center gap-2 mb-2">
+                {typeIcon(card.type)}
+                <h3 className="font-display font-semibold text-foreground">{card.title}</h3>
+              </div>
               <p className="text-sm text-muted-foreground leading-relaxed mb-4">{card.body}</p>
+              {(card.stat1 || card.stat2) && (
+                <div className="flex gap-4 mb-4">
+                  {card.stat1 && (
+                    <div>
+                      <span className="text-lg font-bold text-foreground">{card.stat1}</span>
+                      <span className="text-xs text-muted-foreground ml-1">{card.label1}</span>
+                    </div>
+                  )}
+                  {card.stat2 && (
+                    <div>
+                      <span className="text-lg font-bold text-foreground">{card.stat2}</span>
+                      <span className="text-xs text-muted-foreground ml-1">{card.label2}</span>
+                    </div>
+                  )}
+                </div>
+              )}
               {card.cta && card.url && (
                 <a
                   href={card.url}
@@ -377,24 +637,62 @@ function EducationSection() {
   return (
     <section id="education" className="px-6 md:px-12 lg:px-20 py-16">
       <AnimatedSection>
-        <SectionTitle>Education</SectionTitle>
+        <SectionTitle>{t.education.title}</SectionTitle>
       </AnimatedSection>
       <div className="space-y-6">
         {t.education.items.map((edu, i) => (
-          <AnimatedSection key={edu.school} delay={i * 0.1}>
+          <AnimatedSection key={edu.org} delay={i * 0.1}>
             <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-2 p-5 rounded-2xl bg-card border border-border">
               <div>
-                <h3 className="font-display font-semibold text-foreground">{edu.school}</h3>
-                <p className="text-primary font-medium">{edu.degree}</p>
+                <h3 className="font-display font-semibold text-foreground">{edu.org}</h3>
+                <p className="text-primary font-medium">{edu.title}</p>
                 <p className="text-sm text-muted-foreground flex items-center gap-1 mt-1">
                   <MapPin className="w-3.5 h-3.5" />
-                  {edu.location}
+                  {edu.desc}
                 </p>
               </div>
               <div className="flex items-center gap-1 text-sm text-muted-foreground whitespace-nowrap">
                 <Calendar className="w-3.5 h-3.5" />
-                {edu.dates}
+                {edu.year}
               </div>
+            </div>
+          </AnimatedSection>
+        ))}
+      </div>
+    </section>
+  )
+}
+
+/* ─── Publications ─── */
+
+function PublicationsSection() {
+  return (
+    <section id="publications" className="px-6 md:px-12 lg:px-20 py-16">
+      <AnimatedSection>
+        <SectionTitle>{t.publications.title}</SectionTitle>
+      </AnimatedSection>
+      <div className="space-y-4">
+        {t.publications.items.map((pub, i) => (
+          <AnimatedSection key={pub.title} delay={i * 0.08}>
+            <div className="p-5 rounded-2xl bg-card border border-border hover:border-gold/30 transition-colors">
+              <div className="flex items-center gap-2 mb-1">
+                <FileText className="w-4 h-4 text-gold" />
+                <span className="text-xs text-muted-foreground font-medium">{pub.year}</span>
+              </div>
+              <h3 className="font-display font-semibold text-foreground text-sm mb-1">{pub.title}</h3>
+              <p className="text-xs text-muted-foreground mb-2">{pub.org}</p>
+              {pub.note && <p className="text-xs text-muted-foreground/70 mb-2">{pub.note}</p>}
+              {pub.url && (
+                <a
+                  href={pub.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 text-sm text-primary hover:text-gold transition-colors"
+                >
+                  View paper
+                  <ExternalLink className="w-3 h-3" />
+                </a>
+              )}
             </div>
           </AnimatedSection>
         ))}
@@ -409,18 +707,29 @@ function CertificationsSection() {
   return (
     <section id="certifications" className="px-6 md:px-12 lg:px-20 py-16">
       <AnimatedSection>
-        <SectionTitle>Certifications</SectionTitle>
+        <SectionTitle>{t.certifications.title}</SectionTitle>
       </AnimatedSection>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {t.certifications.items.map((cert, i) => (
-          <AnimatedSection key={cert.name} delay={i * 0.06}>
+          <AnimatedSection key={cert.title} delay={i * 0.06}>
             <div className="p-5 rounded-2xl bg-card border border-border hover:border-gold/30 transition-colors">
               <div className="flex items-center gap-2 mb-2">
                 <Award className="w-4 h-4 text-gold" />
                 <span className="text-xs text-muted-foreground font-medium">{cert.year}</span>
               </div>
-              <h3 className="font-display font-semibold text-foreground text-sm mb-1">{cert.name}</h3>
-              <p className="text-xs text-muted-foreground">{cert.issuer}</p>
+              <h3 className="font-display font-semibold text-foreground text-sm mb-1">{cert.title}</h3>
+              <p className="text-xs text-muted-foreground">{cert.org}</p>
+              {cert.url && cert.url !== '#' && (
+                <a
+                  href={cert.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 text-xs text-primary hover:text-gold transition-colors mt-2"
+                >
+                  Verify
+                  <ExternalLink className="w-3 h-3" />
+                </a>
+              )}
             </div>
           </AnimatedSection>
         ))}
@@ -435,22 +744,24 @@ function SkillsSection() {
   return (
     <section id="skills" className="px-6 md:px-12 lg:px-20 py-16">
       <AnimatedSection>
-        <SectionTitle>Skills</SectionTitle>
+        <SectionTitle>{t.skills.title}</SectionTitle>
       </AnimatedSection>
 
       {/* Languages */}
       <AnimatedSection delay={0.05}>
         <h3 className="text-lg font-display font-semibold text-foreground mb-4 flex items-center gap-2">
           <Globe className="w-4 h-4 text-gold" />
-          Languages
+          {t.skills.languages}
         </h3>
         <div className="flex flex-wrap gap-3 mb-10">
-          {t.skills.languages.map((lang) => (
-            <div key={lang.name} className="px-4 py-2 rounded-xl bg-card border border-border">
-              <span className="font-medium text-foreground text-sm">{lang.name}</span>
-              <span className="text-muted-foreground text-sm ml-2">— {lang.level}</span>
-            </div>
-          ))}
+          <div className="px-4 py-2 rounded-xl bg-card border border-border">
+            <span className="font-medium text-foreground text-sm">{t.skills.english}</span>
+            <span className="text-muted-foreground text-sm ml-2">— {t.skills.professional}</span>
+          </div>
+          <div className="px-4 py-2 rounded-xl bg-card border border-border">
+            <span className="font-medium text-foreground text-sm">{t.skills.urdu}</span>
+            <span className="text-muted-foreground text-sm ml-2">— {t.skills.native}</span>
+          </div>
         </div>
       </AnimatedSection>
 
@@ -458,13 +769,13 @@ function SkillsSection() {
       <AnimatedSection delay={0.1}>
         <h3 className="text-lg font-display font-semibold text-foreground mb-4 flex items-center gap-2">
           <Heart className="w-4 h-4 text-gold" />
-          Soft Skills
+          {t.skills.soft}
         </h3>
         <div className="flex flex-wrap gap-2 mb-10">
-          {t.skills.soft.map((skill) => (
-            <Badge key={skill} variant="default">
+          {t.skills.softSkills.map((skill) => (
+            <span key={skill} className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-muted text-muted-foreground">
               {skill}
-            </Badge>
+            </span>
           ))}
         </div>
       </AnimatedSection>
@@ -473,16 +784,16 @@ function SkillsSection() {
       <AnimatedSection delay={0.15}>
         <h3 className="text-lg font-display font-semibold text-foreground mb-4 flex items-center gap-2">
           <Terminal className="w-4 h-4 text-gold" />
-          Tech Stack
+          {t.techStack.title}
         </h3>
         <div className="space-y-6">
-          {Object.entries(t.skills.tech).map(([category, tools]) => (
-            <div key={category}>
+          {t.techStack.categories.map((category) => (
+            <div key={category.name}>
               <h4 className="text-sm font-medium text-muted-foreground mb-2 uppercase tracking-wider">
-                {category}
+                {category.name}
               </h4>
               <div className="flex flex-wrap gap-2">
-                {tools.map((tool) => (
+                {category.items.map((tool) => (
                   <span
                     key={tool}
                     className="px-2.5 py-1 rounded-md bg-muted text-muted-foreground text-xs font-medium"
@@ -507,18 +818,19 @@ function ContactSection() {
       <AnimatedSection>
         <div className="max-w-2xl">
           <h2 className="text-4xl md:text-5xl font-display font-bold text-foreground mb-6 tracking-tight">
-            {t.contact.title}
+            {t.cta.title}
           </h2>
-          <p className="text-lg text-muted-foreground mb-8">{t.contact.subtitle}</p>
+          <p className="text-lg text-muted-foreground mb-8">{t.cta.desc}</p>
 
           <div className="flex flex-col sm:flex-row items-start gap-4 mb-10">
             <a
-              href={`mailto:${t.contact.email}`}
+              href={`mailto:${t.email}`}
               className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-theme-r text-white font-medium hover:opacity-90 transition-opacity shadow-lg shadow-primary/20"
             >
               <Mail className="w-4 h-4" />
-              {t.contact.email}
+              {t.cta.contact}
             </a>
+            <span className="text-sm text-muted-foreground py-3">{t.email}</span>
           </div>
 
           <div className="flex flex-wrap gap-4">
@@ -607,11 +919,13 @@ export default function App() {
       <ProjectsSection />
       <SharingSection />
       <EducationSection />
+      <PublicationsSection />
       <CertificationsSection />
       <SkillsSection />
       <ContactSection />
       <Footer />
       <BackToTop />
+      <HomeToc />
     </div>
   )
 }

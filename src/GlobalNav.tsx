@@ -89,6 +89,7 @@ const SECTIONS = [
   { id: 'projects', label: 'Projects' },
   { id: 'sharing', label: 'Sharing' },
   { id: 'education', label: 'Education' },
+  { id: 'publications', label: 'Publications' },
   { id: 'certifications', label: 'Certs' },
   { id: 'skills', label: 'Skills' },
   { id: 'contact', label: 'Contact' },
