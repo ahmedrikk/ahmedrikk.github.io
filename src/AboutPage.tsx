@@ -58,7 +58,7 @@ export default function AboutPage({ lang = 'es' }: { lang?: AboutLang }) {
         name: 'Santiago Fernández de Valderrama Aparicio',
         alternateName: ['Santiago Fernández de Valderrama', 'santifer', 'Santi'],
         url: 'https://santifer.io',
-        image: 'https://santifer.io/foto-avatar.png',
+        image: 'https://ahmedrikk.github.io/rik-headshot.webp',
         email: 'hola@santifer.io',
         jobTitle: ['Head of Applied AI', 'AI Product Manager', 'Solutions Architect (No/Low-Code & AI)', 'AI Forward Deployed Engineer'],
         knowsAbout: [
@@ -160,8 +160,8 @@ export default function AboutPage({ lang = 'es' }: { lang?: AboutLang }) {
         {/* Header */}
         <header className="flex flex-col sm:flex-row items-center sm:items-start gap-6 mb-10">
           <img
-            src="/foto-avatar-sm.webp"
-            srcSet="/foto-avatar-sm.webp 192w, /foto-avatar.webp 384w"
+            src="/rik-headshot-sm.webp"
+            srcSet="/rik-headshot-sm.webp 192w, /rik-headshot.webp 384w"
             sizes="96px"
             alt="Santiago Fernández de Valderrama"
             className="w-24 h-24 rounded-full border-2 border-border shadow-lg"

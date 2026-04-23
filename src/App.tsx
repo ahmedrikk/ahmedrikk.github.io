@@ -327,7 +327,9 @@ function HeroSection() {
         />
       </div>
 
-      <div className="relative z-10 max-w-4xl">
+      <div className="relative z-10 flex flex-col-reverse md:flex-row items-center gap-10 md:gap-16 max-w-6xl mx-auto w-full">
+        {/* Text content */}
+        <div className="flex-1 min-w-0">
         <motion.p
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -412,6 +414,26 @@ function HeroSection() {
               {nav.label}
             </button>
           ))}
+        </motion.div>
+      </div>
+
+        {/* Headshot */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.6, delay: 0.2 }}
+          className="shrink-0"
+        >
+          <div className="relative w-48 h-48 md:w-64 md:h-64 lg:w-72 lg:h-72">
+            <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-[#D4A017]/30 to-[#D4A017]/10 rotate-3 scale-105" />
+            <img
+              src="/rik-headshot.webp"
+              alt="Ahmed Bin Athar (RIK)"
+              className="relative w-full h-full object-cover rounded-2xl border-2 border-[#D4A017]/30 shadow-2xl shadow-[#D4A017]/10"
+              width={288}
+              height={288}
+            />
+          </div>
         </motion.div>
       </div>
     </section>

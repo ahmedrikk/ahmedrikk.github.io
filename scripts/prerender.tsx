@@ -166,7 +166,7 @@ const aboutJsonLd = {
     name: 'Santiago Fernández de Valderrama Aparicio',
     alternateName: ['Santiago Fernández de Valderrama', 'santifer', 'Santi'],
     url: 'https://santifer.io',
-    image: 'https://santifer.io/foto-avatar.png',
+    image: 'https://ahmedrikk.github.io/rik-headshot.webp',
     email: 'hola@santifer.io',
     jobTitle: ['Head of Applied AI', 'AI Product Manager', 'Solutions Architect (No/Low-Code & AI)', 'AI Forward Deployed Engineer'],
     knowsAbout: [
@@ -446,7 +446,7 @@ const critters = new Critters({
 });
 
 function dedupePreloads(html: string): string {
-  return html.replace(/<link rel="preload" as="image" href="\/foto-avatar\.webp">/g, '');
+  return html.replace(/<link rel="preload" as="image" href="\/rik-headshot\.webp">/g, '');
 }
 
 /**
@@ -475,7 +475,7 @@ function swapLcpPreload(html: string, isArticle: boolean): string {
   ].filter(Boolean).join(' ');
   const newPreload = `<link ${attrs} />`;
   return html.replace(
-    /<link rel="preload" href="\/foto-avatar-sm\.webp"[^>]*>/,
+    /<link rel="preload" href="\/rik-headshot-sm\.webp"[^>]*>/,
     newPreload,
   );
 }
