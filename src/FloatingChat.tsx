@@ -10,16 +10,11 @@ import {
   Mail,
   ChevronDown,
   FileText,
-  Mic,
-  MessageSquare,
-  PhoneOff,
 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { translations } from './i18n';
 import { getSectionLabels, getPageTitles } from './articles/registry';
-import { useVoiceMode } from './useVoiceMode';
-import VoiceOrb from './VoiceOrb';
 import { apiPath } from './config';
 
 interface RagSource {
@@ -128,7 +123,6 @@ function saveSession(messages: Message[], sessionId: string) {
 
 export default function FloatingChat({ lang }: FloatingChatProps) {
   const t = translations[lang].chat;
-  const v = t.voice;
   const [isOpen, setIsOpen] = useState(() => window.location.hash === '#chat');
   const [immersive, setImmersive] = useState(false);
 
@@ -153,14 +147,10 @@ export default function FloatingChat({ lang }: FloatingChatProps) {
   const [isStreaming, setIsStreaming] = useState(false);
   const [showPrompts, setShowPrompts] = useState(session.showPrompts);
   const [sessionId] = useState(session.sessionId);
-  const [mode, setMode] = useState<'text' | 'voice'>('text');
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
-
-  // Voice mode
-  const voiceMode = useVoiceMode();
 
   // Word-by-word streaming refs
   const fullTextRef = useRef('');        // full accumulated text from SSE
@@ -213,10 +203,10 @@ export default function FloatingChat({ lang }: FloatingChatProps) {
 
   // Focus en input al abrir
   useEffect(() => {
-    if (isOpen && !isMobile && mode === 'text') {
+    if (isOpen && !isMobile) {
       inputRef.current?.focus();
     }
-  }, [isOpen, isMobile, mode]);
+  }, [isOpen, isMobile]);
 
   // Escuchar evento global para abrir chat desde otros componentes
   useEffect(() => {
@@ -269,16 +259,6 @@ export default function FloatingChat({ lang }: FloatingChatProps) {
     }
   }, [lang]);
 
-  // Escape key stops voice mode
-  useEffect(() => {
-    if (mode !== 'voice') return;
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') handleStopVoice();
-    };
-    window.addEventListener('keydown', handleEscape);
-    return () => window.removeEventListener('keydown', handleEscape);
-  }, [mode]);
-
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -316,47 +296,6 @@ export default function FloatingChat({ lang }: FloatingChatProps) {
       // pos === full.length but stream active — wait for more text
     }, 30);
   };
-
-  // Voice mode handlers
-  const handleStartVoice = () => {
-    setMode('voice');
-    voiceMode.start(messages, lang, sessionId, location.pathname);
-  };
-
-  const handleStopVoice = () => {
-    // Merge transcript into messages
-    const transcript = voiceMode.state.transcript;
-    if (transcript.length > 0) {
-      setMessages(prev => [
-        ...prev,
-        ...transcript.map(t => ({ role: t.role as 'user' | 'assistant', content: t.text })),
-      ]);
-      setShowPrompts(false);
-    }
-    voiceMode.stop();
-    setMode('text');
-  };
-
-  const handleSwitchToText = () => {
-    handleStopVoice();
-  };
-
-  // Get voice status text from i18n
-  const getVoiceStatusText = () => {
-    const statusMap: Record<string, string> = {
-      connecting: v.connecting,
-      listening: v.listening,
-      thinking: voiceMode.isSearching ? v.searching : v.thinking,
-      speaking: v.speaking,
-      error: voiceMode.state.error
-        ? v[voiceMode.state.error as keyof typeof v] || v.connection
-        : '',
-    };
-    return statusMap[voiceMode.state.status] || '';
-  };
-
-  // Can toggle to voice?
-  const canStartVoice = !isLoading && !isStreaming && voiceMode.isSupported;
 
   const sendMessage = async (messageText?: string) => {
     const text = messageText || input.trim();
@@ -664,25 +603,14 @@ export default function FloatingChat({ lang }: FloatingChatProps) {
                     {t.title}
                   </h3>
                   <p className="text-xs text-muted-foreground">
-                    {mode === 'voice' ? getVoiceStatusText() || t.subtitle : t.subtitle}
+                    {t.subtitle}
                   </p>
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                {/* Mode indicator (subtle icon) */}
-                {mode === 'voice' && (
-                  <motion.div
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    className="w-6 h-6 rounded-full bg-red-500/20 flex items-center justify-center"
-                  >
-                    <Mic className="w-3 h-3 text-red-400" aria-hidden="true" />
-                  </motion.div>
-                )}
                 {isMobile && (
                   <button
                     onClick={() => {
-                      if (mode === 'voice') handleStopVoice();
                       abortRef.current?.abort();
                       setIsOpen(false);
                     }}
@@ -695,20 +623,16 @@ export default function FloatingChat({ lang }: FloatingChatProps) {
               </div>
             </div>
 
-            {/* Content area — text messages or voice orb */}
-            <AnimatePresence mode="wait">
-              {mode === 'text' ? (
-                <motion.div
-                  key="text-mode"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.15 }}
-                  aria-live="polite"
-                  className={`flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar overscroll-contain ${
-                    isMobile ? 'pb-2' : ''
-                  }`}
-                >
+            {/* Content area — text messages */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.15 }}
+              aria-live="polite"
+              className={`flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar overscroll-contain ${
+                isMobile ? 'pb-2' : ''
+              }`}
+            >
                   {messages.map((message, i) =>
                     // Skip empty assistant messages (they show the loading indicator instead)
                     message.role === 'assistant' &&
@@ -905,61 +829,8 @@ export default function FloatingChat({ lang }: FloatingChatProps) {
                   )}
                   <div ref={messagesEndRef} />
                 </motion.div>
-              ) : (
-                /* Voice mode — orb centered */
-                <motion.div
-                  key="voice-mode"
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.9 }}
-                  transition={{ duration: 0.2 }}
-                  className="flex-1 flex items-center justify-center overflow-hidden"
-                >
-                  <VoiceOrb
-                    status={voiceMode.state.status}
-                    getInputLevel={voiceMode.getInputLevel}
-                    getOutputLevel={voiceMode.getOutputLevel}
-                    remainingSeconds={voiceMode.state.remainingSeconds}
-                    statusText={getVoiceStatusText()}
-                    transcript={undefined}
-                    isMobile={isMobile}
-                  />
 
-                </motion.div>
-              )}
-            </AnimatePresence>
-
-            {/* Source badges in voice mode — positioned at bottom above input */}
-            {mode === 'voice' && voiceMode.voiceSources.length > 0 && (
-              <div className="flex flex-wrap justify-center gap-1.5 px-4 py-2 border-t border-border/50 bg-card/80">
-                {voiceMode.voiceSources.map((source, si) => {
-                  const targetPath = source.page_path_en;
-                  const sectionLabels = getSectionLabels()[targetPath] || {};
-                  const anchorId = source.section_anchor.replace(/^#/, '');
-                  const sectionName = sectionLabels[anchorId] || '';
-                  const articleName = getPageTitles()[targetPath] || source.article_id.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
-
-                  return (
-                    <button
-                      key={`voice-${source.article_id}-${si}`}
-                      onClick={() => {
-                        if (targetPath) {
-                          navigate(targetPath + (source.section_anchor || ''));
-                        }
-                      }}
-                      className={`flex items-center gap-1.5 rounded-full font-medium bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 hover:border-primary/40 active:bg-primary/30 transition-colors duration-200 ${
-                        isMobile ? 'px-3 py-1.5 text-xs' : 'px-2.5 py-1 text-[10px]'
-                      }`}
-                    >
-                      <FileText className="w-3 h-3 shrink-0" />
-                      {articleName}{sectionName ? ` · ${sectionName}` : ''}
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-
-            {/* Input area — transforms between text and voice modes */}
+            {/* Input area */}
             <div
               className="p-4 border-t border-border bg-card"
               style={
@@ -971,85 +842,37 @@ export default function FloatingChat({ lang }: FloatingChatProps) {
                   : undefined
               }
             >
-              {mode === 'text' ? (
-                <div className="flex gap-2">
-                  <input
-                    ref={inputRef}
-                    type="text"
-                    value={input}
-                    onChange={(e) => setInput(e.target.value)}
-                    onKeyDown={handleKeyDown}
-                    placeholder={t.placeholder}
-                    aria-label={t.placeholder}
-                    disabled={isLoading}
-                    enterKeyHint="send"
-                    autoComplete="off"
-                    autoCorrect="off"
-                    className={`flex-1 px-4 rounded-xl bg-muted border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/20 transition-colors disabled:opacity-50 ${
-                      isMobile ? 'py-3 text-base' : 'py-2.5 text-sm'
-                    }`}
-                  />
-                  {/* Mic button */}
-                  {canStartVoice && (
-                    <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={handleStartVoice}
-                      disabled={isLoading || isStreaming}
-                      aria-label={v.start}
-                      title={v.start}
-                      className={`rounded-xl bg-muted border border-border flex items-center justify-center text-muted-foreground hover:text-primary hover:border-primary/30 disabled:opacity-50 disabled:cursor-not-allowed transition-colors ${
-                        isMobile ? 'w-12 h-12' : 'w-10 h-10'
-                      }`}
-                    >
-                      <Mic className={isMobile ? 'w-5 h-5' : 'w-4 h-4'} aria-hidden="true" />
-                    </motion.button>
-                  )}
-                  {/* Send button */}
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => sendMessage()}
-                    disabled={isLoading || !input.trim()}
-                    aria-label={lang === 'en' ? 'Send message' : 'Enviar mensaje'}
-                    className={`rounded-xl bg-gradient-theme flex items-center justify-center text-white disabled:opacity-50 disabled:cursor-not-allowed transition-opacity ${
-                      isMobile ? 'w-12 h-12' : 'w-10 h-10'
-                    }`}
-                  >
-                    <Send className={isMobile ? 'w-5 h-5' : 'w-4 h-4'} aria-hidden="true" />
-                  </motion.button>
-                </div>
-              ) : (
-                /* Voice mode controls */
-                <div className="flex gap-2 justify-center">
-                  {/* Switch to text */}
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={handleSwitchToText}
-                    aria-label={v.switchToText}
-                    className={`rounded-xl bg-muted border border-border flex items-center gap-2 text-muted-foreground hover:text-foreground hover:bg-muted/80 transition-colors ${
-                      isMobile ? 'px-4 py-3 text-sm' : 'px-3 py-2.5 text-xs'
-                    }`}
-                  >
-                    <MessageSquare className={isMobile ? 'w-4 h-4' : 'w-3.5 h-3.5'} aria-hidden="true" />
-                    {v.switchToText}
-                  </motion.button>
-                  {/* End voice session */}
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={handleStopVoice}
-                    aria-label={v.stop}
-                    className={`rounded-xl bg-red-500/10 border border-red-500/20 flex items-center gap-2 text-red-400 hover:bg-red-500/20 hover:border-red-500/30 transition-colors ${
-                      isMobile ? 'px-4 py-3 text-sm' : 'px-3 py-2.5 text-xs'
-                    }`}
-                  >
-                    <PhoneOff className={isMobile ? 'w-4 h-4' : 'w-3.5 h-3.5'} aria-hidden="true" />
-                    {v.stop}
-                  </motion.button>
-                </div>
-              )}
+              <div className="flex gap-2">
+                <input
+                  ref={inputRef}
+                  type="text"
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  placeholder={t.placeholder}
+                  aria-label={t.placeholder}
+                  disabled={isLoading}
+                  enterKeyHint="send"
+                  autoComplete="off"
+                  autoCorrect="off"
+                  className={`flex-1 px-4 rounded-xl bg-muted border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/20 transition-colors disabled:opacity-50 ${
+                    isMobile ? 'py-3 text-base' : 'py-2.5 text-sm'
+                  }`}
+                />
+                {/* Send button */}
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => sendMessage()}
+                  disabled={isLoading || !input.trim()}
+                  aria-label={lang === 'en' ? 'Send message' : 'Enviar mensaje'}
+                  className={`rounded-xl bg-gradient-theme flex items-center justify-center text-white disabled:opacity-50 disabled:cursor-not-allowed transition-opacity ${
+                    isMobile ? 'w-12 h-12' : 'w-10 h-10'
+                  }`}
+                >
+                  <Send className={isMobile ? 'w-5 h-5' : 'w-4 h-4'} aria-hidden="true" />
+                </motion.button>
+              </div>
             </div>
           </motion.div>
         )}
