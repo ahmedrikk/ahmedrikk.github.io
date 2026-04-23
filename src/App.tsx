@@ -1,11 +1,11 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { motion, AnimatePresence } from 'motion/react'
+import { motion } from 'motion/react'
 import {
   Mail, ExternalLink, Briefcase, Award,
   Users, Globe, Bot, Zap, FolderGit2, Sparkles, Linkedin, Github,
   Youtube, ArrowUp, MapPin, Calendar,
   Heart, Film, Clapperboard,
-  Terminal, FileText, Menu, X
+  Terminal, FileText
 } from 'lucide-react'
 import { translations, seo, type Translations } from './i18n'
 import { useHomeSeo } from './articles/use-article-seo'
@@ -128,175 +128,6 @@ function useTypewriterRotation(roles: readonly string[], {
   }, [roles.length, typeSpeed, deleteSpeed, pauseAfterType, pauseAfterDelete])
 
   return { displayText, roleIndex }
-}
-
-/* ─── HomeToc ─── */
-
-const HOME_TOC_SECTIONS = [
-  { id: 'experience', label: 'Experience' },
-  { id: 'projects',  label: 'Projects' },
-  { id: 'speaking',  label: 'Sharing' },
-  { id: 'education', label: 'Education' },
-  { id: 'tech',      label: 'Skills & Stack' },
-  { id: 'contact',   label: 'Contact' },
-] as const
-
-function HomeToc() {
-  const [activeId, setActiveId] = useState<string | null>(null)
-  const [visible, setVisible] = useState(false)
-  const [mobileOpen, setMobileOpen] = useState(false)
-
-  useEffect(() => {
-    const experienceEl = document.getElementById('experience')
-    if (!experienceEl) return
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        setVisible(entry.isIntersecting || entry.boundingClientRect.top < 100)
-      },
-      { rootMargin: '-10% 0px -80% 0px' }
-    )
-
-    observer.observe(experienceEl)
-    return () => observer.disconnect()
-  }, [])
-
-  useEffect(() => {
-    const sectionIds = HOME_TOC_SECTIONS.map(s =>
-      s.id === 'speaking' ? 'sharing' : s.id === 'tech' ? 'skills' : s.id
-    )
-    const elements = sectionIds
-      .map(id => document.getElementById(id))
-      .filter(Boolean) as HTMLElement[]
-    if (elements.length === 0) return
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        for (const entry of entries) {
-          if (entry.isIntersecting) {
-            const id = entry.target.id
-            setActiveId(id === 'sharing' ? 'speaking' : id === 'skills' ? 'tech' : id)
-          }
-        }
-      },
-      { rootMargin: '-20% 0px -60% 0px' }
-    )
-
-    elements.forEach(el => observer.observe(el))
-    return () => observer.disconnect()
-  }, [])
-
-  const scrollTo = (id: string) => {
-    const targetId = id === 'speaking' ? 'sharing' : id === 'tech' ? 'skills' : id
-    const el = document.getElementById(targetId)
-    if (el) {
-      window.scrollTo({ top: el.offsetTop - 80, behavior: 'instant' })
-    }
-    setMobileOpen(false)
-  }
-
-  const activeIndex = HOME_TOC_SECTIONS.findIndex(s => s.id === activeId)
-
-  return (
-    <>
-      {/* Desktop sidebar */}
-      <nav
-        className={`hidden lg:flex fixed top-1/2 -translate-y-1/2 z-40 flex-col items-start transition-all duration-500 ${
-          visible ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-3 pointer-events-none'
-        }`}
-        style={{ left: 'max(1rem, calc(50% - 46rem))' }}
-      >
-        <div className="relative flex flex-col items-center gap-0">
-          {HOME_TOC_SECTIONS.map((section, i) => (
-            <div key={section.id} className="flex flex-col items-center">
-              <button
-                onClick={() => scrollTo(section.id)}
-                className="group flex items-center gap-3 py-1.5 text-sm transition-colors"
-              >
-                <span className={`relative flex items-center justify-center w-2.5 h-2.5 rounded-full transition-all duration-300 ${
-                  activeId === section.id
-                    ? 'bg-primary scale-125'
-                    : 'bg-muted-foreground/30 group-hover:bg-muted-foreground/60'
-                }`}>
-                  {activeId === section.id && (
-                    <motion.span
-                      className="absolute inset-0 rounded-full bg-primary"
-                      animate={{ scale: [1, 1.3, 1] }}
-                      transition={{ duration: 2, repeat: Infinity }}
-                      style={{ opacity: 0.3 }}
-                    />
-                  )}
-                </span>
-                <span className={`transition-colors ${
-                  activeId === section.id ? 'text-foreground font-medium' : 'text-muted-foreground group-hover:text-foreground'
-                }`}>
-                  {section.label}
-                </span>
-              </button>
-              {i < HOME_TOC_SECTIONS.length - 1 && (
-                <div className={`w-px h-3 transition-colors duration-500 ${
-                  i < activeIndex ? 'bg-primary' : 'bg-border'
-                }`} />
-              )}
-            </div>
-          ))}
-        </div>
-      </nav>
-
-      {/* Mobile floating button */}
-      <div className="lg:hidden">
-        <button
-          onClick={() => setMobileOpen(true)}
-          className={`fixed bottom-6 right-6 z-40 p-3 rounded-full bg-card border border-border shadow-lg transition-all ${
-            visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none'
-          }`}
-        >
-          <Menu className="w-5 h-5 text-foreground" />
-        </button>
-
-        <AnimatePresence>
-          {mobileOpen && (
-            <>
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="fixed inset-0 bg-black/40 z-40 backdrop-blur-sm"
-                onClick={() => setMobileOpen(false)}
-              />
-              <motion.div
-                initial={{ x: '100%' }}
-                animate={{ x: 0 }}
-                exit={{ x: '100%' }}
-                transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-                className="fixed right-0 top-0 bottom-0 w-64 bg-card border-l border-border z-50 p-6 flex flex-col gap-2"
-              >
-                <div className="flex items-center justify-between mb-4">
-                  <span className="font-display font-semibold text-foreground">Sections</span>
-                  <button onClick={() => setMobileOpen(false)} className="p-1 rounded-lg hover:bg-muted">
-                    <X className="w-5 h-5 text-muted-foreground" />
-                  </button>
-                </div>
-                {HOME_TOC_SECTIONS.map((section) => (
-                  <button
-                    key={section.id}
-                    onClick={() => scrollTo(section.id)}
-                    className={`text-left px-3 py-2.5 rounded-lg text-sm transition-colors ${
-                      activeId === section.id
-                        ? 'bg-primary/10 text-primary font-medium'
-                        : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-                    }`}
-                  >
-                    {section.label}
-                  </button>
-                ))}
-              </motion.div>
-            </>
-          )}
-        </AnimatePresence>
-      </div>
-    </>
-  )
 }
 
 /* ─── Hero Section ─── */
@@ -947,7 +778,7 @@ export default function App() {
       <ContactSection />
       <Footer />
       <BackToTop />
-      <HomeToc />
+      {/* HomeToc removed — top navbar provides sufficient navigation */}
     </div>
   )
 }
