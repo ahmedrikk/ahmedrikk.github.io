@@ -410,8 +410,8 @@ function ExperienceSection() {
     t.experience.otakuWorld,
     t.experience.abbvie,
     t.experience.cotton,
-    t.experience.rikovations,
     t.experience.concordia,
+    t.experience.rikovations,
     t.experience.independentFilmmaker,
   ]
 
