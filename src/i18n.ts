@@ -106,6 +106,18 @@ const _en = {
       ],
     },
 
+    abbvie: {
+      company: 'AbbVie',
+      location: 'Chicago, IL',
+      role: 'Technical Support Specialist',
+      period: 'October 2022 – September 2023',
+      highlights: [
+        "Provided IT and technical support across security, compliance, and infrastructure for one of the world's largest pharmaceutical companies, resolving 100+ support tickets monthly with a first-contact resolution rate above 90%.",
+        "Enforced security and compliance protocols across enterprise systems, ensuring all support activity met AbbVie's internal IT governance standards and regulatory requirements.",
+        'Collaborated cross-functionally with security, IT, and business teams to triage, escalate, and resolve technical issues across a large-scale enterprise environment.',
+      ],
+    },
+
     cotton: {
       company: 'Cotton Connection',
       location: 'Chicago, IL',

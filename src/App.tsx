@@ -408,6 +408,7 @@ function ExperienceSection() {
   const jobs = [
     t.experience.meta,
     t.experience.otakuWorld,
+    t.experience.abbvie,
     t.experience.cotton,
     t.experience.rikovations,
     t.experience.concordia,
