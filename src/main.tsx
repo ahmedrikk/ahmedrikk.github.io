@@ -82,7 +82,9 @@ function GlobalChat() {
 
 function ConditionalNav() {
   const { pathname } = useLocation()
-  if (pathname.startsWith('/ops')) return null
+  // Home page has LeftSidebar — no need for top nav
+  // Ops dashboard has its own nav
+  if (pathname === '/' || pathname.startsWith('/ops')) return null
   return <GlobalNav />
 }
 

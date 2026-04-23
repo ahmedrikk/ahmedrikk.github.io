@@ -61,7 +61,7 @@ function SectionTitle({ children, id }: { children: React.ReactNode; id?: string
   return (
     <h2
       id={id}
-      className="text-3xl md:text-4xl font-display font-bold text-foreground mb-8 tracking-tight text-center"
+      className="text-3xl md:text-4xl font-display font-bold text-foreground mb-8 tracking-tight"
     >
       {children}
     </h2>
@@ -251,7 +251,7 @@ function HeroSection() {
         />
       </div>
 
-      <div className="relative z-10 flex flex-col items-center text-center gap-10 max-w-3xl mx-auto w-full">
+      <div className="relative z-10 flex flex-col items-start gap-10 max-w-3xl mx-auto w-full">
         {/* Headshot — centered on top */}
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
@@ -303,7 +303,7 @@ function HeroSection() {
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.25 }}
-            className="flex flex-wrap justify-center gap-2 mb-8"
+            className="flex flex-wrap gap-2 mb-8"
           >
             {t.pillLabels.map((label, i) => (
               <span
@@ -323,7 +323,7 @@ function HeroSection() {
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.35 }}
-            className="space-y-4 text-muted-foreground text-lg max-w-2xl mx-auto mb-10"
+            className="space-y-4 text-muted-foreground text-lg max-w-2xl mb-10"
           >
             <p>{t.story.context}</p>
             <p>{t.story.why}</p>
@@ -338,7 +338,7 @@ function HeroSection() {
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.45 }}
-            className="flex flex-wrap justify-center gap-3"
+            className="flex flex-wrap gap-3"
           >
             {t.story.nav.map((nav) => (
               <button
