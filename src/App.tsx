@@ -5,7 +5,7 @@ import {
   Users, Globe, Bot, Zap, FolderGit2, Sparkles, Linkedin, Github,
   Youtube, ArrowUp, MapPin, Calendar,
   Heart, Film, Clapperboard,
-  Terminal, FileText
+  Terminal, FileText, BookOpen
 } from 'lucide-react'
 import { translations, seo, type Translations } from './i18n'
 import { useHomeSeo } from './articles/use-article-seo'
@@ -146,6 +146,14 @@ const SIDEBAR_SECTIONS = [
 
 function LeftSidebar() {
   const [activeId, setActiveId] = useState<string | null>(null)
+  const [visible, setVisible] = useState(false)
+
+  useEffect(() => {
+    const onScroll = () => setVisible(window.scrollY > 400)
+    window.addEventListener('scroll', onScroll, { passive: true })
+    onScroll()
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
 
   useEffect(() => {
     const ids = SIDEBAR_SECTIONS.map(s => s.id)
@@ -174,7 +182,9 @@ function LeftSidebar() {
   }, [])
 
   return (
-    <aside className="hidden lg:flex flex-col fixed left-0 top-0 h-screen w-60 border-r border-border bg-background z-40">
+    <aside className={`hidden lg:flex flex-col fixed left-0 top-0 h-screen w-60 border-r border-border bg-background z-40 transition-all duration-500 ${
+      visible ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-6 pointer-events-none'
+    }`}>
       <div className="flex flex-col h-full px-8 py-10">
         {/* Brand */}
         <div className="mb-10">
@@ -213,6 +223,9 @@ function LeftSidebar() {
           </a>
           <a href="https://youtube.com/@ahmedrikk" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-gold transition-colors">
             <Youtube className="w-4 h-4" />
+          </a>
+          <a href="https://scholar.google.com/citations?view_op=view_citation&hl=en&user=AgYOBH4AAAAJ&citation_for_view=AgYOBH4AAAAJ:u-x6o8ySG0sC" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-gold transition-colors">
+            <BookOpen className="w-4 h-4" />
           </a>
           <a href="mailto:ahmed.athar.rik@gmail.com" className="text-muted-foreground hover:text-gold transition-colors">
             <Mail className="w-4 h-4" />
