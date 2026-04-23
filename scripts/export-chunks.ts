@@ -394,6 +394,15 @@ async function main() {
     totalChunks += chunks.length
   }
 
+  // Process plaintext llms.txt
+  const llmsChunks = parsePlaintext('public/llms.txt', 'llms')
+  if (llmsChunks.length > 0) {
+    const outPath = resolve(CHUNKS_DIR, 'llms.json')
+    writeFileSync(outPath, JSON.stringify(llmsChunks, null, 2))
+    console.log(`  ✓ llms.txt → ${llmsChunks.length} chunks`)
+    totalChunks += llmsChunks.length
+  }
+
   console.log(`\n✅ Total: ${totalChunks} chunks exported to scripts/chunks/`)
 }
 

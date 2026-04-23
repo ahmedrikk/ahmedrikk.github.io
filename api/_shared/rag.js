@@ -53,10 +53,12 @@ export async function embedQuery(query) {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
+      'Authorization': `Bearer ${process.env.JINA_API_KEY || ''}`,
     },
     body: JSON.stringify({
       model: 'jina-embeddings-v3',
       input: [query],
+      dimensions: 768,
     }),
   })
 

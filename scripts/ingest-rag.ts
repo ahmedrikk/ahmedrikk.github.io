@@ -222,10 +222,14 @@ async function embedTexts(texts: string[]): Promise<number[][]> {
     const batch = texts.slice(i, i + EMBEDDING_BATCH_SIZE)
     const response = await fetch('https://api.jina.ai/v1/embeddings', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${process.env.JINA_API_KEY || ''}`,
+      },
       body: JSON.stringify({
         model: EMBEDDING_MODEL,
         input: batch,
+        dimensions: 768,
       }),
     })
 
