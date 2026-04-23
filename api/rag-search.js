@@ -12,8 +12,8 @@ export const config = {
 }
 
 const client = new OpenAI({
-  apiKey: process.env.KIMI_API_KEY,
-  baseURL: 'https://api.moonshot.cn/v1',
+  apiKey: process.env.GROQ_API_KEY,
+  baseURL: 'https://api.groq.com/openai/v1',
 })
 
 let langfuseClient = null
@@ -43,7 +43,7 @@ async function reasonWithKimi(query, formattedChunks, span, langfuse) {
 
     const response = await Promise.race([
       client.chat.completions.create({
-        model: 'moonshot-v1-128k',
+        model: 'llama-3.3-70b-versatile',
         max_tokens: 300,
         messages: [
           { role: 'system', content: `${systemPromptText}\n\n${VOICE_OVERRIDE}` },
@@ -81,7 +81,7 @@ async function reasonWithKimi(query, formattedChunks, span, langfuse) {
         inputTokens,
         outputTokens,
         latencyMs,
-        cost: calcCost('moonshot-v1-128k', inputTokens, outputTokens),
+        cost: calcCost('llama-3.3-70b-versatile', inputTokens, outputTokens),
       },
     })
 

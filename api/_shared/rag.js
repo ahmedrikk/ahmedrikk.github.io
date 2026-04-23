@@ -7,8 +7,8 @@
 // ---------------------------------------------------------------------------
 
 export const MODEL_COSTS = {
-  'moonshot-v1-128k': { input: 60.0 / 1e6, output: 60.0 / 1e6 },
-  'moonshot-v1-8k': { input: 60.0 / 1e6, output: 60.0 / 1e6 },
+  'llama-3.3-70b-versatile': { input: 0.59 / 1e6, output: 0.79 / 1e6 },
+  'llama-3.1-8b-instant': { input: 0.05 / 1e6, output: 0.08 / 1e6 },
   'jina-embeddings-v3': { input: 0, output: 0 }, // Free tier
 }
 
@@ -137,7 +137,7 @@ export async function rerankChunks(query, chunks, openaiClient) {
     ).join('\n')
 
     const response = await openaiClient.chat.completions.create({
-      model: 'moonshot-v1-8k',
+      model: 'llama-3.1-8b-instant',
       max_tokens: 50,
       messages: [{
         role: 'user',

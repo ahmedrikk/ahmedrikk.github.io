@@ -89,8 +89,8 @@ export default async function handler(req) {
   })
 
   const openai = new OpenAI({
-    apiKey: process.env.KIMI_API_KEY,
-    baseURL: 'https://api.moonshot.cn/v1',
+    apiKey: process.env.GROQ_API_KEY,
+    baseURL: 'https://api.groq.com/openai/v1',
   })
 
   const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null
@@ -122,7 +122,7 @@ export default async function handler(req) {
           .replace('{assistant_response}', assistantResponse)
 
         const response = await openai.chat.completions.create({
-          model: 'moonshot-v1-128k',
+          model: 'llama-3.3-70b-versatile',
           max_tokens: 300,
           messages: [{ role: 'user', content: prompt }],
         })

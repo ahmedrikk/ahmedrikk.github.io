@@ -12,8 +12,8 @@ import { getSystemPrompt } from './_shared/prompt.js'
 import { handleOptions, getCorsHeaders } from './_shared/cors.js'
 
 const client = new OpenAI({
-  apiKey: process.env.KIMI_API_KEY,
-  baseURL: 'https://api.moonshot.cn/v1',
+  apiKey: process.env.GROQ_API_KEY,
+  baseURL: 'https://api.groq.com/openai/v1',
 })
 
 // ---------------------------------------------------------------------------
@@ -153,7 +153,7 @@ export default async function handler(req) {
       const td0 = Date.now()
 
       const firstResponse = await client.chat.completions.create({
-        model: 'moonshot-v1-128k',
+        model: 'llama-3.3-70b-versatile',
         max_tokens: 300,
         messages: [{ role: 'system', content: systemContent }, ...cleanMessages],
         tools: [PORTFOLIO_TOOL],
@@ -169,7 +169,7 @@ export default async function handler(req) {
           inputTokens: tdInputTokens,
           outputTokens: tdOutputTokens,
           latencyMs: toolDecisionMs,
-          cost: calcCost('moonshot-v1-128k', tdInputTokens, tdOutputTokens),
+          cost: calcCost('llama-3.3-70b-versatile', tdInputTokens, tdOutputTokens),
         },
       })
 
@@ -313,7 +313,7 @@ function streamResponse({
   let stream = null
   if (!precomputedResponse) {
     const streamParams = {
-      model: 'moonshot-v1-128k',
+      model: 'llama-3.3-70b-versatile',
       max_tokens: 800,
       messages: [{ role: 'system', content: systemContent }, ...messages],
     }
@@ -389,7 +389,7 @@ function streamResponse({
               const activeStream = attempt === 0
                 ? await stream
                 : await client.chat.completions.create({
-                    model: 'moonshot-v1-128k',
+                    model: 'llama-3.3-70b-versatile',
                     max_tokens: 800,
                     messages: [{ role: 'system', content: systemContent }, ...messages],
                     stream: true,
@@ -426,7 +426,7 @@ function streamResponse({
               if (!leakDetected) {
                 // OpenAI streaming does not provide usage; estimate output tokens from length
                 const genOut = Math.ceil(fullOutput.length / 4)
-                generationCost = calcCost('moonshot-v1-128k', 0, genOut)
+                generationCost = calcCost('llama-3.3-70b-versatile', 0, genOut)
                 generationSpan?.end({
                   metadata: {
                     outputTokens: genOut,
@@ -465,9 +465,9 @@ function streamResponse({
         if (!leakDetected) {
           // Calculate total cost across all spans
           const costBreakdown = {
-            toolDecision: calcCost('moonshot-v1-128k', tdInputTokens || 0, tdOutputTokens || 0),
+            toolDecision: calcCost('llama-3.3-70b-versatile', tdInputTokens || 0, tdOutputTokens || 0),
             embedding: calcCost('jina-embeddings-v3', ragUsage?.embeddingTokens || 0),
-            reranking: calcCost('moonshot-v1-8k', ragUsage?.rerankInputTokens || 0, ragUsage?.rerankOutputTokens || 0),
+            reranking: calcCost('llama-3.1-8b-instant', ragUsage?.rerankInputTokens || 0, ragUsage?.rerankOutputTokens || 0),
             generation: generationCost,
           }
           costBreakdown.total = Object.values(costBreakdown).reduce((a, b) => a + b, 0)
@@ -534,7 +534,7 @@ function streamResponse({
         if (fallbackMessages && !fullOutput) {
           try {
             const fallbackStream = await client.chat.completions.create({
-              model: 'moonshot-v1-128k',
+              model: 'llama-3.3-70b-versatile',
               max_tokens: 800,
               messages: [{ role: 'system', content: systemContent }, ...fallbackMessages],
               stream: true,
@@ -618,11 +618,11 @@ async function scoreTrace(traceId, userMessage, response, ragUsed, langfuse) {
     const scoringGen = langfuse.generation({
       traceId,
       name: 'online_scoring',
-      model: 'moonshot-v1-8k',
+      model: 'llama-3.1-8b-instant',
     })
 
     const scoringResponse = await client.chat.completions.create({
-      model: 'moonshot-v1-8k',
+      model: 'llama-3.1-8b-instant',
       max_tokens: 200,
       messages: [{
         role: 'user',
