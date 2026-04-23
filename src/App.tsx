@@ -61,7 +61,7 @@ function SectionTitle({ children, id }: { children: React.ReactNode; id?: string
   return (
     <h2
       id={id}
-      className="text-3xl md:text-4xl font-display font-bold text-foreground mb-8 tracking-tight"
+      className="text-3xl md:text-4xl font-display font-bold text-foreground mb-8 tracking-tight text-center"
     >
       {children}
     </h2>
@@ -130,6 +130,99 @@ function useTypewriterRotation(roles: readonly string[], {
   return { displayText, roleIndex }
 }
 
+/* ─── Left Sidebar ─── */
+
+const SIDEBAR_SECTIONS = [
+  { id: 'competencies', label: 'Competencies' },
+  { id: 'experience', label: 'Experience' },
+  { id: 'projects', label: 'Projects' },
+  { id: 'sharing', label: 'Sharing' },
+  { id: 'education', label: 'Education' },
+  { id: 'publications', label: 'Publications' },
+  { id: 'certifications', label: 'Certs' },
+  { id: 'skills', label: 'Skills' },
+  { id: 'contact', label: 'Contact' },
+] as const
+
+function LeftSidebar() {
+  const [activeId, setActiveId] = useState<string | null>(null)
+
+  useEffect(() => {
+    const ids = SIDEBAR_SECTIONS.map(s => s.id)
+    const elements = ids
+      .map(id => document.getElementById(id))
+      .filter(Boolean) as HTMLElement[]
+    if (elements.length === 0) return
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            setActiveId(entry.target.id)
+          }
+        }
+      },
+      { rootMargin: '-20% 0px -60% 0px' }
+    )
+
+    elements.forEach(el => observer.observe(el))
+    return () => observer.disconnect()
+  }, [])
+
+  const scrollTo = useCallback((id: string) => {
+    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' })
+  }, [])
+
+  return (
+    <aside className="hidden lg:flex flex-col fixed left-0 top-0 h-screen w-60 border-r border-border bg-background z-40">
+      <div className="flex flex-col h-full px-8 py-10">
+        {/* Brand */}
+        <div className="mb-10">
+          <a href="#" onClick={(e) => { e.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' }) }} className="text-2xl font-display font-bold text-foreground hover:text-gold transition-colors">
+            RIK
+          </a>
+          <p className="text-xs text-muted-foreground mt-2 leading-relaxed">
+            Filmmaker, AI Builder,<br />Content Strategist
+          </p>
+        </div>
+
+        {/* Nav */}
+        <nav className="flex-1 flex flex-col gap-1">
+          {SIDEBAR_SECTIONS.map((section) => (
+            <button
+              key={section.id}
+              onClick={() => scrollTo(section.id)}
+              className={`text-left px-3 py-2 rounded-lg text-sm transition-colors ${
+                activeId === section.id
+                  ? 'bg-primary/10 text-primary font-medium'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+              }`}
+            >
+              {section.label}
+            </button>
+          ))}
+        </nav>
+
+        {/* Social */}
+        <div className="flex items-center gap-3 pt-6 border-t border-border">
+          <a href="https://linkedin.com/in/ahmedrikk" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-gold transition-colors">
+            <Linkedin className="w-4 h-4" />
+          </a>
+          <a href="https://github.com/ahmedrikk" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-gold transition-colors">
+            <Github className="w-4 h-4" />
+          </a>
+          <a href="https://youtube.com/@ahmedrikk" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-gold transition-colors">
+            <Youtube className="w-4 h-4" />
+          </a>
+          <a href="mailto:ahmed.athar.rik@gmail.com" className="text-muted-foreground hover:text-gold transition-colors">
+            <Mail className="w-4 h-4" />
+          </a>
+        </div>
+      </div>
+    </aside>
+  )
+}
+
 /* ─── Hero Section ─── */
 
 function HeroSection() {
@@ -145,7 +238,7 @@ function HeroSection() {
   const { displayText: roleText, roleIndex } = useTypewriterRotation(t.greetingRoles)
 
   return (
-    <section className="relative min-h-[90vh] flex flex-col justify-center px-6 md:px-12 lg:px-20 pt-24 pb-16 overflow-hidden">
+    <section className="relative min-h-[90vh] flex flex-col justify-center px-6 md:px-12 py-20 overflow-hidden">
       {/* Ambient background orbs */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         <div
@@ -158,114 +251,114 @@ function HeroSection() {
         />
       </div>
 
-      <div className="relative z-10 flex flex-col-reverse md:flex-row items-center gap-10 md:gap-16 max-w-6xl mx-auto w-full">
-        {/* Text content */}
-        <div className="flex-1 min-w-0">
-        <motion.p
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="text-gold font-medium text-lg mb-4"
-        >
-          {t.greeting}
-        </motion.p>
-
-        <motion.h1
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.1 }}
-          className="text-4xl md:text-6xl lg:text-7xl font-display font-bold text-foreground leading-tight mb-6"
-        >
-          <span className="text-gradient-theme">
-            {hydrated ? roleText : t.greetingRoles[0]}
-          </span>
-          {hydrated && (
-            <span
-              className="inline-block w-[3px] h-[0.85em] bg-primary ml-1 rounded-sm translate-y-[2px]"
-              style={{ animation: 'blink 1s step-end infinite' }}
-            />
-          )}
-        </motion.h1>
-
-        <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.25 }}
-          className="flex flex-wrap gap-2 mb-8"
-        >
-          {t.pillLabels.map((label, i) => (
-            <span
-              key={label}
-              className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 backdrop-blur-sm ${
-                hydrated && i === roleIndex
-                  ? 'border border-[#D4A017] bg-[#D4A017]/15 text-foreground scale-105'
-                  : 'border border-[#D4A017]/30 bg-background/80 text-muted-foreground'
-              }`}
-            >
-              {label}
-            </span>
-          ))}
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.35 }}
-          className="space-y-4 text-muted-foreground text-lg max-w-2xl mb-10"
-        >
-          <p>{t.story.context}</p>
-          <p>{t.story.why}</p>
-          <div className="text-foreground font-medium space-y-1">
-            {t.story.seeking.map((line, i) => (
-              <p key={i}>{line}</p>
-            ))}
-          </div>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.45 }}
-          className="flex flex-wrap gap-3"
-        >
-          {t.story.nav.map((nav) => (
-            <button
-              key={nav.label}
-              onClick={() => scrollTo(nav.href.replace('#', ''))}
-              className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-medium text-sm transition-all ${
-                (nav as any).highlight
-                  ? 'bg-gradient-theme-r text-white hover:opacity-90 shadow-lg shadow-primary/20'
-                  : 'bg-card border border-border text-foreground hover:border-primary/50 hover:bg-primary/5'
-              }`}
-            >
-              {nav.icon === 'briefcase' && <Briefcase className="w-4 h-4" />}
-              {nav.icon === 'folder' && <FolderGit2 className="w-4 h-4" />}
-              {nav.icon === 'mail' && <Mail className="w-4 h-4" />}
-              {nav.icon === 'bot' && <Bot className="w-4 h-4" />}
-              {nav.label}
-            </button>
-          ))}
-        </motion.div>
-      </div>
-
-        {/* Headshot */}
+      <div className="relative z-10 flex flex-col items-center text-center gap-10 max-w-3xl mx-auto w-full">
+        {/* Headshot — centered on top */}
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.6, delay: 0.2 }}
+          transition={{ duration: 0.6, delay: 0.1 }}
           className="shrink-0"
         >
-          <div className="relative w-48 h-48 md:w-64 md:h-64 lg:w-72 lg:h-72">
-            <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-[#D4A017]/30 to-[#D4A017]/10 rotate-3 scale-105" />
+          <div className="relative w-40 h-40 md:w-52 md:h-52">
+            <div className="absolute inset-0 rounded-full bg-gradient-to-br from-[#D4A017]/30 to-[#D4A017]/10 rotate-3 scale-105" />
             <img
               src="/rik-headshot.webp"
               alt="Ahmed Bin Athar (RIK)"
-              className="relative w-full h-full object-cover rounded-2xl border-2 border-[#D4A017]/30 shadow-2xl shadow-[#D4A017]/10"
-              width={288}
-              height={288}
+              className="relative w-full h-full object-cover rounded-full border-2 border-[#D4A017]/30 shadow-2xl shadow-[#D4A017]/10"
+              width={208}
+              height={208}
             />
           </div>
         </motion.div>
+
+        {/* Text content — centered */}
+        <div className="flex-1 min-w-0">
+          <motion.p
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="text-gold font-medium text-lg mb-4"
+          >
+            {t.greeting}
+          </motion.p>
+
+          <motion.h1
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.1 }}
+            className="text-4xl md:text-6xl lg:text-7xl font-display font-bold text-foreground leading-tight mb-6"
+          >
+            <span className="text-gradient-theme">
+              {hydrated ? roleText : t.greetingRoles[0]}
+            </span>
+            {hydrated && (
+              <span
+                className="inline-block w-[3px] h-[0.85em] bg-primary ml-1 rounded-sm translate-y-[2px]"
+                style={{ animation: 'blink 1s step-end infinite' }}
+              />
+            )}
+          </motion.h1>
+
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.25 }}
+            className="flex flex-wrap justify-center gap-2 mb-8"
+          >
+            {t.pillLabels.map((label, i) => (
+              <span
+                key={label}
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 backdrop-blur-sm ${
+                  hydrated && i === roleIndex
+                    ? 'border border-[#D4A017] bg-[#D4A017]/15 text-foreground scale-105'
+                    : 'border border-[#D4A017]/30 bg-background/80 text-muted-foreground'
+                }`}
+              >
+                {label}
+              </span>
+            ))}
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.35 }}
+            className="space-y-4 text-muted-foreground text-lg max-w-2xl mx-auto mb-10"
+          >
+            <p>{t.story.context}</p>
+            <p>{t.story.why}</p>
+            <div className="text-foreground font-medium space-y-1">
+              {t.story.seeking.map((line, i) => (
+                <p key={i}>{line}</p>
+              ))}
+            </div>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.45 }}
+            className="flex flex-wrap justify-center gap-3"
+          >
+            {t.story.nav.map((nav) => (
+              <button
+                key={nav.label}
+                onClick={() => scrollTo(nav.href.replace('#', ''))}
+                className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-medium text-sm transition-all ${
+                  (nav as any).highlight
+                    ? 'bg-gradient-theme-r text-white hover:opacity-90 shadow-lg shadow-primary/20'
+                    : 'bg-card border border-border text-foreground hover:border-primary/50 hover:bg-primary/5'
+                }`}
+              >
+                {nav.icon === 'briefcase' && <Briefcase className="w-4 h-4" />}
+                {nav.icon === 'folder' && <FolderGit2 className="w-4 h-4" />}
+                {nav.icon === 'mail' && <Mail className="w-4 h-4" />}
+                {nav.icon === 'bot' && <Bot className="w-4 h-4" />}
+                {nav.label}
+              </button>
+            ))}
+          </motion.div>
+        </div>
       </div>
     </section>
   )
@@ -275,7 +368,7 @@ function HeroSection() {
 
 function CompetenciesSection() {
   return (
-    <section id="competencies" className="px-6 md:px-12 lg:px-20 py-16">
+    <section id="competencies" className="py-16">
       <AnimatedSection>
         <SectionTitle>{t.coreCompetencies.title}</SectionTitle>
       </AnimatedSection>
@@ -308,7 +401,7 @@ function ExperienceSection() {
   ]
 
   return (
-    <section id="experience" className="px-6 md:px-12 lg:px-20 py-16">
+    <section id="experience" className="py-16">
       <AnimatedSection>
         <SectionTitle>{t.experience.title}</SectionTitle>
       </AnimatedSection>
@@ -347,7 +440,7 @@ function ExperienceSection() {
 
 function ProjectsSection() {
   return (
-    <section id="projects" className="px-6 md:px-12 lg:px-20 py-16">
+    <section id="projects" className="py-16">
       <AnimatedSection>
         <SectionTitle>{t.projects.title}</SectionTitle>
       </AnimatedSection>
@@ -436,7 +529,7 @@ function SharingSection() {
   }
 
   return (
-    <section id="sharing" className="px-6 md:px-12 lg:px-20 py-16">
+    <section id="sharing" className="py-16">
       <AnimatedSection>
         <SectionTitle>{t.sharing.title}</SectionTitle>
       </AnimatedSection>
@@ -488,7 +581,7 @@ function SharingSection() {
 
 function EducationSection() {
   return (
-    <section id="education" className="px-6 md:px-12 lg:px-20 py-16">
+    <section id="education" className="py-16">
       <AnimatedSection>
         <SectionTitle>{t.education.title}</SectionTitle>
       </AnimatedSection>
@@ -520,7 +613,7 @@ function EducationSection() {
 
 function PublicationsSection() {
   return (
-    <section id="publications" className="px-6 md:px-12 lg:px-20 py-16">
+    <section id="publications" className="py-16">
       <AnimatedSection>
         <SectionTitle>{t.publications.title}</SectionTitle>
       </AnimatedSection>
@@ -558,7 +651,7 @@ function PublicationsSection() {
 
 function CertificationsSection() {
   return (
-    <section id="certifications" className="px-6 md:px-12 lg:px-20 py-16">
+    <section id="certifications" className="py-16">
       <AnimatedSection>
         <SectionTitle>{t.certifications.title}</SectionTitle>
       </AnimatedSection>
@@ -595,7 +688,7 @@ function CertificationsSection() {
 
 function SkillsSection() {
   return (
-    <section id="skills" className="px-6 md:px-12 lg:px-20 py-16">
+    <section id="skills" className="py-16">
       <AnimatedSection>
         <SectionTitle>{t.skills.title}</SectionTitle>
       </AnimatedSection>
@@ -667,7 +760,7 @@ function SkillsSection() {
 
 function ContactSection() {
   return (
-    <section id="contact" className="px-6 md:px-12 lg:px-20 py-20">
+    <section id="contact" className="py-20">
       <AnimatedSection>
         <div className="max-w-2xl">
           <h2 className="text-4xl md:text-5xl font-display font-bold text-foreground mb-6 tracking-tight">
@@ -713,7 +806,7 @@ function ContactSection() {
 
 function Footer() {
   return (
-    <footer className="px-6 md:px-12 lg:px-20 py-8 border-t border-border">
+    <footer className="max-w-3xl mx-auto px-6 md:px-12 py-8 border-t border-border">
       <div className="flex flex-col md:flex-row items-center justify-between gap-4">
         <p className="text-sm text-muted-foreground">{t.contact.footer}</p>
         <div className="flex items-center gap-4">
@@ -766,19 +859,25 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <HeroSection />
-      <CompetenciesSection />
-      <ExperienceSection />
-      <ProjectsSection />
-      <SharingSection />
-      <EducationSection />
-      <PublicationsSection />
-      <CertificationsSection />
-      <SkillsSection />
-      <ContactSection />
-      <Footer />
-      <BackToTop />
-      {/* HomeToc removed — top navbar provides sufficient navigation */}
+      <LeftSidebar />
+      <main className="lg:ml-60">
+        <div className="max-w-3xl mx-auto px-6 md:px-12">
+          <HeroSection />
+        </div>
+        <div className="max-w-3xl mx-auto px-6 md:px-12">
+          <CompetenciesSection />
+          <ExperienceSection />
+          <ProjectsSection />
+          <SharingSection />
+          <EducationSection />
+          <PublicationsSection />
+          <CertificationsSection />
+          <SkillsSection />
+          <ContactSection />
+        </div>
+        <Footer />
+        <BackToTop />
+      </main>
     </div>
   )
 }
