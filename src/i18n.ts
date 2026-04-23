@@ -86,10 +86,10 @@ const _en = {
       role: 'AI Content and Creative Quality Specialist (Contract)',
       period: 'November 2025 – Present',
       highlights: [
-        'Evaluating 500+ AI-generated creative assets weekly across Meta AI platforms, applying narrative and editorial judgment to multimodal outputs (video, image, text).',
-        "Maintained 85%+ quality scores throughout tenure — earned 2 promotions in 8 weeks: Trainee → Production → Jr. Team Lead.",
-        'Identifying recurring failure patterns in AI-generated content and documenting findings to improve production team quality standards.',
-        "Daily hands-on experience inside Meta's AI ecosystem: Metamate, Meta Halo SRT, meta.ai dogfooding.",
+        'Evaluated 500+ AI-generated creative assets weekly across Meta AI platforms, maintaining 85%+ quality scores by applying structured narrative, cultural, and brand alignment rubrics to multimodal outputs (video, image, text).',
+        "Earned 2 promotions in 8 weeks — Trainee → Production → Jr. Team Lead — by consistently exceeding Meta's internal annotation quality benchmarks.",
+        'Identified and documented recurring failure patterns in AI-generated content including cultural misrepresentation, hallucinated context, and demographic bias, contributing structured findings to improve production team standards.',
+        "Built repeatable quality evaluation frameworks for LLM-generated creative content using Meta's internal tooling: Halo SRT, Metamate, and meta.ai dogfooding environments.",
       ],
     },
 
@@ -99,34 +99,10 @@ const _en = {
       role: 'Senior Content and Marketing Manager',
       period: 'October 2023 – November 2025',
       highlights: [
-        'Grew organic traffic 40% via integrated SEO, editorial, and social strategy tracked via Google Analytics and Ahrefs.',
-        'Managed 2,000+ digital content assets across gaming and anime verticals.',
-        'Increased audience engagement 30% month-over-month.',
-        'Built editorial workflows using Claude, ChatGPT, and MidJourney that increased publishing output 30% without additional headcount.',
-      ],
-    },
-
-    rikovations: {
-      company: 'Rikovations Pvt. Ltd.',
-      location: 'Remote — Global Accounts',
-      role: 'Marketing Manager / Creative Director',
-      period: 'March 2019 – March 2022',
-      highlights: [
-        'Led campaign delivery for 50+ client accounts across technology, consumer electronics, and professional services.',
-        'Drove 45% average client revenue growth over 3 years.',
-        'Managed a team of 4 across a $50K annual production budget with zero missed deadlines.',
-        'Reduced client ramp time 30% by building brand playbooks and creative brief templates.',
-      ],
-    },
-
-    concordia: {
-      company: 'Concordia University Chicago',
-      location: 'Chicago, IL',
-      role: 'AV and Technical Support Specialist',
-      period: 'October 2019 – August 2022',
-      highlights: [
-        'Managed video installations, classroom AV, and event media across a multi-building academic campus.',
-        'Coordinated broadcast-quality AV for faculty events, lecture recordings, and grant application videos.',
+        'Grew organic traffic 40% in 12 months by designing and executing an integrated SEO and editorial strategy tracked via Google Analytics (GA4) and Ahrefs across gaming and anime verticals.',
+        'Increased audience engagement 30% month-over-month by producing platform-native short-form video and social content optimized for YouTube, Instagram Reels, and TikTok discovery algorithms.',
+        'Managed 2,000+ digital content assets across simultaneous verticals, building editorial calendars and production workflows that increased publishing output 30% without additional headcount.',
+        'Reduced per-asset production time 40% by integrating Claude, ChatGPT, and MidJourney into the editorial pipeline for drafting, ideation, and image generation at scale.',
       ],
     },
 
@@ -136,7 +112,47 @@ const _en = {
       role: 'Digital Marketing Manager',
       period: 'March 2022 – September 2022',
       highlights: [
-        'Increased eCommerce sales 15% and web traffic 20% in 6 months via Meta, Google, and social campaigns.',
+        'Increased eCommerce sales 15% and web traffic 20% in 6 months by producing and optimizing paid and organic campaigns across Meta Ads, Google, and social channels.',
+        'Tracked all campaign performance via UTM parameters and Google Analytics, delivering weekly performance reports that informed creative and budget decisions.',
+      ],
+    },
+
+    rikovations: {
+      company: 'Rikovations Pvt. Ltd.',
+      location: 'Remote — Global Accounts',
+      role: 'Marketing Manager / Creative Director',
+      period: 'March 2019 – March 2022',
+      highlights: [
+        'Drove 45% average revenue growth across a portfolio of 50+ client accounts by leading campaign strategy, creative direction, and delivery across technology, consumer electronics, and professional services verticals.',
+        'Onboarded 15+ new clients and reduced ramp time 30% by building standardized brand playbooks, creative brief templates, and client onboarding documentation.',
+        'Managed a team of 4 designers, writers, and coordinators across a $50K annual production budget, delivering 100% of projects on deadline over 3 years.',
+        'Produced 50+ campaigns including advertisements, product launch videos, cinematic brand visuals, and social content across digital and broadcast channels.',
+      ],
+    },
+
+    concordia: {
+      company: 'Concordia University Chicago',
+      location: 'Chicago, IL',
+      role: 'AV and Technical Support Specialist',
+      period: 'October 2019 – August 2022',
+      highlights: [
+        'Managed video installations, classroom AV, and live event media across a multi-building academic campus, supporting 100+ faculty and staff users.',
+        'Coordinated broadcast-quality AV production for faculty events, lecture recordings, grant application videos, and campus communications on deadline.',
+        'Collaborated with academic departments to translate faculty needs into practical video deliverables, maintaining a 95%+ satisfaction rating on post-event surveys.',
+      ],
+    },
+
+    independentFilmmaker: {
+      company: 'Independent Filmmaker',
+      location: 'Chicago, IL (and internationally)',
+      role: 'Director / Writer / Editor',
+      period: '2018 – Present',
+      highlights: [
+        'Directed and edited 4 short films earning 15+ international festival selections, broadcast distribution on Can 9 TV with 3 repeat airings, and 120K+ cumulative views across YouTube and social platforms.',
+        'Received Honorable Mention at Cine Pobre International Film Festival 2024 for Rekhta, an experimental short using black-and-white and color contrast as narrative metaphor.',
+        'Won 2nd place at the Mandi Theater 10-Minute Play Contest 2025 for Just Ten Minutes, and received 2 Mandi Theater trophies for writing and direction.',
+        'Developed Bulleyah, a 117-page feature screenplay recovering the erased queer identity of 18th-century Sufi poet Bulleh Shah — 5 years in active development.',
+        'Built AI-assisted production workflows using MidJourney, Stable Diffusion, ComfyUI, Runway, and Higgsfield to prototype cinematic visuals for the Bulleyah proof-of-concept pitch reel.',
       ],
     },
   },
