@@ -466,7 +466,7 @@ function streamResponse({
           // Calculate total cost across all spans
           const costBreakdown = {
             toolDecision: calcCost('moonshot-v1-128k', tdInputTokens || 0, tdOutputTokens || 0),
-            embedding: calcCost('text-embedding-3-small', ragUsage?.embeddingTokens || 0),
+            embedding: calcCost('jina-embeddings-v3', ragUsage?.embeddingTokens || 0),
             reranking: calcCost('moonshot-v1-8k', ragUsage?.rerankInputTokens || 0, ragUsage?.rerankOutputTokens || 0),
             generation: generationCost,
           }

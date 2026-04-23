@@ -9,7 +9,7 @@
 export const MODEL_COSTS = {
   'moonshot-v1-128k': { input: 60.0 / 1e6, output: 60.0 / 1e6 },
   'moonshot-v1-8k': { input: 60.0 / 1e6, output: 60.0 / 1e6 },
-  'text-embedding-3-small': { input: 0.02 / 1e6 },
+  'jina-embeddings-v3': { input: 0, output: 0 }, // Free tier
 }
 
 export function calcCost(model, inputTokens, outputTokens = 0) {
@@ -22,7 +22,7 @@ export function calcCost(model, inputTokens, outputTokens = 0) {
 // ---------------------------------------------------------------------------
 
 export function isRagEnabled() {
-  return !!(process.env.OPENAI_API_KEY && process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY)
+  return !!(process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY)
 }
 
 export const PORTFOLIO_TOOL = {
@@ -44,25 +44,24 @@ export const PORTFOLIO_TOOL = {
 }
 
 // ---------------------------------------------------------------------------
-// RAG: embed query via OpenAI REST API (Edge-compatible)
+// RAG: embed query via Jina AI REST API (Edge-compatible, free tier)
 // ---------------------------------------------------------------------------
 
 export async function embedQuery(query) {
   const t0 = Date.now()
-  const response = await fetch('https://api.openai.com/v1/embeddings', {
+  const response = await fetch('https://api.jina.ai/v1/embeddings', {
     method: 'POST',
     headers: {
-      'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      model: 'text-embedding-3-small',
-      input: query,
+      model: 'jina-embeddings-v3',
+      input: [query],
     }),
   })
 
   if (!response.ok) {
-    throw new Error(`OpenAI embedding failed: ${response.status}`)
+    throw new Error(`Jina AI embedding failed: ${response.status}`)
   }
 
   const data = await response.json()
@@ -311,7 +310,7 @@ export async function searchPortfolio(query, trace, openaiClient) {
 
   // 1. Embed
   let embedding
-  const embeddingGen = trace?.generation({ name: 'embedding', model: 'text-embedding-3-small', metadata: { query } })
+  const embeddingGen = trace?.generation({ name: 'embedding', model: 'jina-embeddings-v3', metadata: { query } })
   try {
     const embResult = await embedQuery(query)
     embedding = embResult.embedding

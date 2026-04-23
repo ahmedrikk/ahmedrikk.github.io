@@ -500,9 +500,9 @@ function ProjectsSection() {
       </AnimatedSection>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         {t.projects.items.map((project, i) => {
-          const href = project.linkUrl || (project.link ? `https://${project.link}` : null)
+          const href = ('linkUrl' in project && project.linkUrl) || (project.link ? `https://${project.link}` : null)
           const isCode = project.link?.includes('github') || false
-          const linkLabel = project.linkUrl
+          const linkLabel = ('linkUrl' in project && project.linkUrl)
             ? t.projects.viewPrototype
             : isCode
             ? t.projects.viewCode
@@ -542,7 +542,7 @@ function ProjectsSection() {
                     </span>
                   ))}
                 </div>
-                {project.stars && (
+                {'stars' in project && project.stars && (
                   <div className="flex items-center gap-1.5 mb-3 text-sm text-gold">
                     <span className="font-semibold">{project.stars}</span>
                     <span className="text-muted-foreground text-xs">members</span>
@@ -596,23 +596,23 @@ function SharingSection() {
                 <h3 className="font-display font-semibold text-foreground">{card.title}</h3>
               </div>
               <p className="text-sm text-muted-foreground leading-relaxed mb-4">{card.body}</p>
-              {(card.stat1 || card.stat2) && (
+              {((card as any).stat1 || (card as any).stat2) && (
                 <div className="flex gap-4 mb-4">
-                  {card.stat1 && (
+                  {(card as any).stat1 && (
                     <div>
-                      <span className="text-lg font-bold text-foreground">{card.stat1}</span>
-                      <span className="text-xs text-muted-foreground ml-1">{card.label1}</span>
+                      <span className="text-lg font-bold text-foreground">{(card as any).stat1}</span>
+                      <span className="text-xs text-muted-foreground ml-1">{(card as any).label1}</span>
                     </div>
                   )}
-                  {card.stat2 && (
+                  {(card as any).stat2 && (
                     <div>
-                      <span className="text-lg font-bold text-foreground">{card.stat2}</span>
-                      <span className="text-xs text-muted-foreground ml-1">{card.label2}</span>
+                      <span className="text-lg font-bold text-foreground">{(card as any).stat2}</span>
+                      <span className="text-xs text-muted-foreground ml-1">{(card as any).label2}</span>
                     </div>
                   )}
                 </div>
               )}
-              {card.cta && card.url && (
+              {'cta' in card && 'url' in card && card.cta && card.url && (
                 <a
                   href={card.url}
                   target="_blank"
@@ -681,8 +681,8 @@ function PublicationsSection() {
               </div>
               <h3 className="font-display font-semibold text-foreground text-sm mb-1">{pub.title}</h3>
               <p className="text-xs text-muted-foreground mb-2">{pub.org}</p>
-              {pub.note && <p className="text-xs text-muted-foreground/70 mb-2">{pub.note}</p>}
-              {pub.url && (
+              {'note' in pub && pub.note && <p className="text-xs text-muted-foreground/70 mb-2">{pub.note}</p>}
+              {'url' in pub && pub.url && (
                 <a
                   href={pub.url}
                   target="_blank"

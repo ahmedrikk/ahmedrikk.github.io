@@ -4,13 +4,13 @@
  * Features:
  *   - Change detection via content hashing (skip unchanged articles)
  *   - Chunk splitting for large sections (1000 chars, 200 overlap)
- *   - Contextual retrieval: prepend summary via Haiku before embedding
- *   - OpenAI text-embedding-3-small for embeddings (1536 dims)
+ *   - Contextual retrieval: prepend summary via Kimi before embedding
+ *   - Jina AI embeddings-v3 for embeddings (768 dims, free tier)
  *   - Upsert to Supabase `documents` table
  *
  * Requires env vars:
- *   OPENAI_API_KEY, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
- *   ANTHROPIC_API_KEY (optional, for contextual retrieval)
+ *   SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
+ *   KIMI_API_KEY (optional, for contextual retrieval)
  *
  * Usage:
  *   npx tsx --tsconfig tsconfig.app.json scripts/ingest-rag.ts
@@ -26,7 +26,7 @@ import { fileURLToPath } from 'node:url'
 import { createHash } from 'node:crypto'
 import OpenAI from 'openai'
 import { createClient } from '@supabase/supabase-js'
-import Anthropic from '@anthropic-ai/sdk'
+// import Anthropic from '@anthropic-ai/sdk'
 import { articleRegistry } from '../src/articles/registry.ts'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
@@ -40,18 +40,19 @@ const HASHES_FILE = resolve(root, '.rag-hashes.json')
 
 const MAX_CHUNK_SIZE = 1000    // characters
 const CHUNK_OVERLAP = 200      // characters
-const EMBEDDING_MODEL = 'text-embedding-3-small'
-const EMBEDDING_BATCH_SIZE = 20 // OpenAI allows up to 2048, but we batch for safety
+const EMBEDDING_MODEL = 'jina-embeddings-v3'
+const EMBEDDING_BATCH_SIZE = 20 // Jina AI allows large batches
 
 // ---------------------------------------------------------------------------
 // Clients
 // ---------------------------------------------------------------------------
 
-function getOpenAI(): OpenAI {
-  if (!process.env.OPENAI_API_KEY) {
-    throw new Error('OPENAI_API_KEY is required')
-  }
-  return new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
+function getKimi(): OpenAI | null {
+  if (!process.env.KIMI_API_KEY) return null
+  return new OpenAI({
+    apiKey: process.env.KIMI_API_KEY,
+    baseURL: 'https://api.moonshot.cn/v1',
+  })
 }
 
 function getSupabase() {
@@ -61,9 +62,8 @@ function getSupabase() {
   return createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY)
 }
 
-function getAnthropic(): Anthropic | null {
-  if (!process.env.ANTHROPIC_API_KEY) return null
-  return new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+function getAnthropic(): OpenAI | null {
+  return getKimi()
 }
 
 // ---------------------------------------------------------------------------
@@ -215,16 +215,26 @@ async function addContextualSummaries(
 // Embedding
 // ---------------------------------------------------------------------------
 
-async function embedTexts(texts: string[], openai: OpenAI): Promise<number[][]> {
+async function embedTexts(texts: string[]): Promise<number[][]> {
   const allEmbeddings: number[][] = []
 
   for (let i = 0; i < texts.length; i += EMBEDDING_BATCH_SIZE) {
     const batch = texts.slice(i, i + EMBEDDING_BATCH_SIZE)
-    const response = await openai.embeddings.create({
-      model: EMBEDDING_MODEL,
-      input: batch,
+    const response = await fetch('https://api.jina.ai/v1/embeddings', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: EMBEDDING_MODEL,
+        input: batch,
+      }),
     })
-    for (const item of response.data) {
+
+    if (!response.ok) {
+      throw new Error(`Jina AI embedding failed: ${response.status}`)
+    }
+
+    const data = await response.json()
+    for (const item of data.data) {
       allEmbeddings.push(item.embedding)
     }
   }
@@ -276,13 +286,12 @@ async function main() {
   console.log('🔄 RAG Ingestion starting...\n')
 
   // Check for env vars
-  if (!process.env.OPENAI_API_KEY || !process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
-    console.log('⚠️  Missing env vars (OPENAI_API_KEY, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)')
+  if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    console.log('⚠️  Missing env vars (SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)')
     console.log('   Skipping RAG ingestion. Set env vars to enable.\n')
     process.exit(0) // Exit gracefully so build continues
   }
 
-  const openai = getOpenAI()
   const supabase = getSupabase()
   const anthropic = getAnthropic()
 
@@ -335,7 +344,7 @@ async function main() {
 
     // Embed
     console.log(`     → Embedding ${enrichedTexts.length} chunks...`)
-    const embeddings = await embedTexts(enrichedTexts, openai)
+    const embeddings = await embedTexts(enrichedTexts)
 
     // Delete old + insert new
     console.log(`     → Upserting to Supabase...`)
