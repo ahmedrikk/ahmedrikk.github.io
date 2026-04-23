@@ -315,14 +315,14 @@ const _en = {
         year: '2018',
         title: 'Analysis of SAR Images Speckle Reduction Techniques',
         org: 'IEEE Xplore — Conference Publication',
-        url: 'https://ieeexplore.ieee.org/document/8346335',
+        url: 'https://ieeexplore.ieee.org/abstract/document/8346335',
       },
       {
-        year: '2018',
+        year: '2019',
         title: 'A Study of SAR Despeckling Methods',
         org: 'KJCIS Vol. 2, Issue 1 — HEC-recognized journal',
         note: 'M. Haris, M. Ashraf, F. Ahsan, A. Athar, M. Malik',
-        url: 'https://kjcisjournal.kiet.edu.pk/index.php/kjcis/article/view/16',
+        url: 'https://doi.org/10.51153/kjcis.v2i1.16',
       },
       {
         year: '2018',
