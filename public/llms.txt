@@ -83,17 +83,24 @@ Chicago, IL (and internationally) | 2018 – Present
 
 ## Projects
 
+### Bulleyah (Feature Screenplay, 117 pp.)
+In Development
+
+Recovering the erased queer identity of 18th-century Sufi poet Bulleh Shah. Five years in development. AI-assisted proof-of-concept visuals built with MidJourney, Stable Diffusion, and Runway. Refuses to translate South Asian queer experience for Western consumption.
+
+Tech: Screenwriting, Archival Research, Decolonial Aesthetics, AI Visuals
+
 ### QuranAI / AIQuran
 Live Production | aiquran.live
 
-RAG-powered conversational app for exploring Quranic text. Built to serve LGBTQ+ Muslims navigating identity within religious frameworks — a population with no institutional support and high risk of harm from LLM misinformation.
+A RAG-powered conversational app for Muslims navigating identity within religious frameworks — communities with no institutional support and high risk of harm from generic LLM misinformation. Serving hundreds of queries monthly from users in Pakistan, the UK, and the Gulf.
 
 Tech: Claude API, RAG Architecture, Vector Database, Prompt Engineering, PWA
 
 ### Pixel Pulse
 Live | github.com/ahmedrikk
 
-Full-stack AI gaming news aggregator. Fetches from 11+ RSS feeds (IGN, Polygon, Kotaku), processes through Groq LLM (Llama 3) to generate 280-character summaries. XP/battle pass gamification system.
+An AI-native gaming editorial that reads 11+ sources (IGN, Polygon, Kotaku) and writes its own voice — sharp, irreverent, 280-character briefs that feel like a group chat with someone who actually plays games. Built because gaming coverage was too slow and too polite.
 
 Tech: React, TypeScript, Tailwind, Supabase Edge Functions, Groq LLM
 
@@ -111,17 +118,10 @@ Experimental short using black-and-white and color contrast as narrative metapho
 
 Tech: Adobe Premiere Pro, DaVinci Resolve, Color Theory
 
-### Bulleyah
-In Development
-
-117-page feature screenplay recovering the erased queer identity of 18th-century Sufi poet Bulleh Shah. Five years in development. Refuses to translate South Asian queer experience for Western consumption.
-
-Tech: Screenwriting, Archival Research, Decolonial Aesthetics
-
 ### Pakistani LGBTQ+ Community
 Active
 
-Founded and scaled a harm reduction community for queer Pakistanis navigating criminalized environments. PrEP access guidance, HIV prevention education, mental health support.
+Harm reduction community for queer Pakistanis in criminalized environments. Guidance on PrEP access, HIV prevention, and mental health support. Operates where no institutional help exists.
 
 Tech: Community Operations, Harm Reduction, Discord, Peer Counseling
 
@@ -134,7 +134,7 @@ Tech: Community Operations, Harm Reduction, Discord, Peer Counseling
 ## Publications
 
 - **Analysis of SAR Images Speckle Reduction Techniques** — IEEE Xplore, 2018
-- **A Study of SAR Despeckling Methods** — KJCIS Vol. 2, Issue 1, 2018
+- **A Study of SAR Despeckling Methods** — KJCIS Vol. 2, Issue 1, 2019
 - **The Blood Moon** — Daastan Publication House, 2018 (Novel)
 
 ## Certifications

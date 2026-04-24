@@ -503,12 +503,6 @@ function ProjectsSection() {
                     </span>
                   ))}
                 </div>
-                {'stars' in project && project.stars && (
-                  <div className="flex items-center gap-1.5 mb-3 text-sm text-gold">
-                    <span className="font-semibold">{project.stars}</span>
-                    <span className="text-muted-foreground text-xs">members</span>
-                  </div>
-                )}
                 {href && (
                   <a
                     href={href}
