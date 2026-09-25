@@ -193,7 +193,7 @@ const _en = {
         link: 'aiquran.live',
       },
       {
-        title: 'Pixel Pulse',
+        title: 'Talus',
         badge: 'Live',
         badgeBuilding: '',
         desc: 'An AI-native gaming editorial that reads 11+ sources (IGN, Polygon, Kotaku) and writes its own voice — sharp, irreverent, 280-character briefs that feel like a group chat with someone who actually plays games. Built because gaming coverage was too slow and too polite.',
@@ -472,3 +472,4 @@ export const translations = {
 } as const;
 
 export type Translations = typeof _en;
+

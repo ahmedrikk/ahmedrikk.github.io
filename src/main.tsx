@@ -99,7 +99,7 @@ Object.defineProperty(window, '__rik', {
     stack: 'React 19 + TypeScript + Vite + Tailwind v4 + Motion',
     llm: 'Claude (streaming SSE)',
     films: '4 short films, 15+ festival selections, 120K+ views',
-    projects: 'QuranAI (live RAG), Pixel Pulse (AI news aggregator)',
+    projects: 'QuranAI (live RAG), Talus (AI news aggregator)',
     current: 'Meta Reality Labs — AI Content Evaluation',
     hire_me: 'ahmedrikk@gmail.com',
   }),
@@ -171,3 +171,4 @@ if (root.hasChildNodes()) {
 } else {
   createRoot(root).render(app)
 }
+
