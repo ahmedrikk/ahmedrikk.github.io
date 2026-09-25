@@ -73,7 +73,7 @@ function autoCloseMarkdown(text: string): string {
 /** Convert bare URLs in text to markdown links so ReactMarkdown renders them */
 function linkifyUrls(text: string): string {
   // First: fix malformed markdown links — [text](url without closing )
-  let fixed = text.replace(
+  let fixed = text.replace(/\b(?:hi|hola)@santifer\.io\b/gi, '[ahmedrikk@gmail.com](mailto:ahmedrikk@gmail.com)').replace(
     /\[([^\]]+)\]\((https?:\/\/[^\s)]+)(?:\)\s*)?/g,
     (_match, label, url) => {
       const cleanUrl = url.replace(/[.,;:!?]+$/, '');
@@ -87,7 +87,7 @@ function linkifyUrls(text: string): string {
     (match, _url, offset) => {
       // Skip if inside a markdown link: check for [...]( before or [ before
       const before = fixed.slice(Math.max(0, offset - 200), offset);
-      if (/\]\($/.test(before)) return match;
+      if (before.lastIndexOf('](') > before.lastIndexOf(')')) return match;
       if (/\[[^\]]*$/.test(before)) return match;
       return `[${match}](${match.startsWith('http') ? match : `https://${match}`})`;
     },
