@@ -437,8 +437,8 @@ const _en = {
     title: 'Ask RIK',
     subtitle: 'AI version of Ahmed. Ask me anything.',
     placeholder: 'Ask me anything...',
-    offline: 'You appear to be offline. Check your connection and try again.',
-    error: 'Something went wrong. Please try again.',
+    offline: 'You appear to be offline. Check your connection and try again, or email [ahmedrikk@gmail.com](mailto:ahmedrikk@gmail.com).',
+    error: 'Something went wrong. Please try again or email [ahmedrikk@gmail.com](mailto:ahmedrikk@gmail.com).',
     contactCtaTitle: 'Want to go deeper?',
     prompts: [
       { icon: 'briefcase', label: 'What have you built?', query: 'What have you built?' },
